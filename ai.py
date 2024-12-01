@@ -54,4 +54,3 @@ def save_model(model, model_path='saved_model'):
     except Exception as e:
         print(f"Error saving model: {e}")
         return False
-
