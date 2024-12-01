@@ -1,10 +1,11 @@
 from fast_training_flappy_bird import FastTrainingFlappyBird
 from ai import create_flappy_model, save_model
-from game_state_handler import GameStateHandler
+from collections import deque
 import numpy as np
 import gc
 import tensorflow as tf
 from tensorflow import keras
+import random
 
 class FastLearningFlappyBird:
     def __init__(self, model_path='saved_model', training_speed=10):
@@ -18,12 +19,10 @@ class FastLearningFlappyBird:
             print(f"Error initializing model: {e}")
             raise
             
-        self.state_handler = GameStateHandler()
         self.training_speed = training_speed
         self.game = FastTrainingFlappyBird()
         
         # Enhanced state tracking
-        self.current_session_states = []
         self.games_played = 0
         self.last_loss = float('inf')
         self.best_distance = 0
@@ -33,6 +32,14 @@ class FastLearningFlappyBird:
         self.recent_games_buffer = []
         self.buffer_size = 50
         self.successful_runs = []
+        
+        # Experience replay buffers
+        self.replay_buffer = deque(maxlen=50000)  # Store last 50k experiences
+        self.success_buffer = deque(maxlen=10000)  # Store experiences from good runs
+        self.min_replay_size = 1000  # Min experiences before training
+        self.batch_size = 32
+        self.training_epochs = 20  # Train more on each batch
+        self.success_threshold = 1000  # Distance that defines a "good" run
         
         # Dynamic exploration
         self.min_exploration_rate = 0.05
@@ -55,31 +62,28 @@ class FastLearningFlappyBird:
     def initialize_random_data(self, num_games):
         """Initialize the model with random gameplay data"""
         print("Generating initial random training data...")
-        self.state_handler.save_frame({
-            'distance_to_pipe': 0,
-            'current_y': 0,
-            'velocity': 0,
-            'pipe_y': 0,
-            'y_error': 0
-        }, 0, append=False)
         
         for _ in range(num_games):
             self.game.init_game_state()
-            self.current_session_states = []
             
             while not self.game.game_over:
                 game_state = self.game.get_game_state()
                 if game_state:
-                    # Random jumping with bias towards not jumping
+                    state_input = self.get_state_input(game_state)
                     action = 1 if np.random.random() < 0.1 else 0
-                    self.current_session_states.append((game_state, action))
+                    self.save_experience(state_input, action)
                     if action:
                         self.game.velocity = self.game.jump_strength
                 self.game.update()
-            
-            if self.current_session_states:
-                self.state_handler.save_game_session(self.current_session_states)
-            
+    
+    def save_experience(self, state, action):
+        """Store experience in replay buffer"""
+        self.replay_buffer.append((state, action))
+        
+        # If this was part of a successful run, also save to success buffer
+        if self.game.distance_traveled >= self.success_threshold:
+            self.success_buffer.append((state, action))
+    
     def predict_action(self, game_state):
         """Get prediction from model with controlled exploration"""
         state_input = self.get_state_input(game_state)
@@ -115,27 +119,42 @@ class FastLearningFlappyBird:
         return np.random.random() < jump_prob
     
     def train_model(self):
-        """Train the model on stored and recent data"""
-        X_stored, y_stored = self.state_handler.load_training_data()
+        """Train on mixed batch of regular and successful experiences"""
+        if len(self.replay_buffer) < self.min_replay_size:
+            return
+            
+        # Create training batch with mix of regular and successful experiences
+        training_batch = []
         
-        if len(X_stored) > 0:
-            # Convert to categorical
-            y_categorical = tf.keras.utils.to_categorical(y_stored, num_classes=2)
-            
-            print(f"Training model on {len(X_stored)} states...")
-            history = self.model.fit(
-                X_stored, y_categorical,
-                epochs=5,
-                batch_size=32,
-                verbose=0
-            )
-            new_loss = history.history['loss'][-1]
-            
-            if new_loss < self.last_loss:
-                improvement = (self.last_loss - new_loss) / self.last_loss * 100
-                print(f"Model improved! Loss decreased by {improvement:.2f}% from {self.last_loss:.4f} to {new_loss:.4f}")
-                self.model.save(self.model_path)
-            self.last_loss = new_loss
+        # Add regular experiences
+        training_batch.extend(random.sample(self.replay_buffer, 
+                                         min(len(self.replay_buffer), self.batch_size)))
+        
+        # Add successful experiences if available
+        if self.success_buffer:
+            training_batch.extend(random.sample(self.success_buffer,
+                                             min(len(self.success_buffer), self.batch_size // 4)))
+        
+        # Prepare data for training
+        states = np.array([exp[0] for exp in training_batch])
+        actions = np.array([exp[1] for exp in training_batch])
+        y_categorical = tf.keras.utils.to_categorical(actions, num_classes=2)
+        
+        # Train for multiple epochs on this batch
+        history = self.model.fit(
+            states, y_categorical,
+            epochs=self.training_epochs,
+            batch_size=self.batch_size,
+            verbose=0
+        )
+        
+        new_loss = history.history['loss'][-1]
+        
+        if new_loss < self.last_loss:
+            improvement = (self.last_loss - new_loss) / self.last_loss * 100
+            print(f"Model improved! Loss decreased by {improvement:.2f}% from {self.last_loss:.4f} to {new_loss:.4f}")
+            self.model.save(self.model_path)
+        self.last_loss = new_loss
     
     def run_fast_training(self, num_games=1000, display_interval=50):
         """Run training at maximum speed"""
@@ -145,14 +164,14 @@ class FastLearningFlappyBird:
                     gc.collect()  # Periodic memory cleanup
                 
                 self.game.init_game_state()
-                self.current_session_states = []
                 
                 # Run single game
                 while not self.game.game_over:
                     game_state = self.game.get_game_state()
                     if game_state:
                         should_jump = self.predict_action(game_state)
-                        self.current_session_states.append((game_state, 1 if should_jump else 0))
+                        state_input = self.get_state_input(game_state)
+                        self.save_experience(state_input, 1 if should_jump else 0)
                         if should_jump:
                             self.game.velocity = self.game.jump_strength
                     self.game.update()
@@ -169,9 +188,8 @@ class FastLearningFlappyBird:
                 self.average_distance = (self.average_distance * (self.games_played - 1) + 
                                     final_distance) / self.games_played
                 
-                # Save and train periodically
-                if game_num % self.training_speed == 0:
-                    self.state_handler.save_game_session(self.current_session_states)
+                # Train more frequently with replay buffer
+                if game_num % (self.training_speed // 2) == 0:
                     self.train_model()
                 
                 # Display progress periodically
