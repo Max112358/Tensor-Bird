@@ -45,11 +45,11 @@ class FastLearningFlappyBird:
     def get_state_input(self, game_state):
         """Get the normalized 5-feature state input for the model"""
         return [
-            game_state['distance_to_pipe'] / 500,
-            game_state['current_y'] / 400,
-            game_state['velocity'] / 10,
-            game_state['pipe_y'] / 400,
-            game_state['y_error'] / 160000
+            game_state['distance_to_pipe'] / 500,  
+            game_state['current_y'] / 400,         
+            game_state['velocity'] / 10,          
+            game_state['pipe_y'] / 400,          
+            game_state['y_error'] / 10000         
         ]
     
     def initialize_random_data(self, num_games):

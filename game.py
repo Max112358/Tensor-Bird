@@ -81,14 +81,15 @@ class FlappyBird:
         # Calculate center of pipe gap
         pipe_center_y = next_pipe['gap_y'] + (self.pipe_gap / 2)
             
-        # Calculate squared error between bird and pipe Y positions
-        y_error = (self.bird_y - pipe_center_y) ** 2  # Now using center of gap
+        # New balanced error calculation
+        diff = abs(self.bird_y - pipe_center_y)
+        y_error = diff * min(diff, 100)  # Caps the quadratic growth at 100 pixels
             
         return {
             'distance_to_pipe': next_pipe['x'] - self.bird_x,
             'current_y': self.bird_y,
             'velocity': self.velocity,
-            'pipe_y': pipe_center_y,  # Now returning center instead of top edge
+            'pipe_y': pipe_center_y,
             'y_error': y_error
         }
     
