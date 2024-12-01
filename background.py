@@ -3,7 +3,7 @@ import pygame
 class Background:
     def __init__(self, screen_width, screen_height):
         # Load and scale background image
-        self.background_img = pygame.image.load('background.png')
+        self.background_img = pygame.image.load('art/background.png')
         
         # Scale background to match screen height while maintaining aspect ratio
         bg_aspect_ratio = self.background_img.get_width() / self.background_img.get_height()

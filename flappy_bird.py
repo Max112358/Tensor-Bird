@@ -31,8 +31,8 @@ BIRD_SIZE = 60  # Doubled from 30
 VISIBLE_PIPES = 5
 
 # Load and scale pipe images
-UP_PIPE_IMG = pygame.image.load('purple_pipe.png')
-DOWN_PIPE_IMG = pygame.image.load('purple_pipe.png')
+UP_PIPE_IMG = pygame.image.load('art/purple_pipe.png')
+DOWN_PIPE_IMG = pygame.image.load('art/purple_pipe.png')
 
 # Scale pipe images
 up_pipe_aspect_ratio = UP_PIPE_IMG.get_height() / UP_PIPE_IMG.get_width()
@@ -46,7 +46,7 @@ DOWN_PIPE_IMG = pygame.transform.scale(DOWN_PIPE_IMG,
 class Bird:
     def __init__(self, x, y):
         # Load and scale original bird image
-        original_image = pygame.image.load('bird.png')
+        original_image = pygame.image.load('art/bird.png')
         self.original_image = pygame.transform.scale(original_image, (BIRD_SIZE, BIRD_SIZE))
         
         # Create a copy of the scaled image for hue shifting
