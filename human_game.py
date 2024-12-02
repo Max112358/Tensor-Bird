@@ -11,6 +11,8 @@ import time
 
 def main():
     pygame.init()
+    pygame.display.set_caption(GAME_TITLE)
+
     clock = pygame.time.Clock()
     
     def reset_game():

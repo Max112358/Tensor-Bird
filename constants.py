@@ -1,6 +1,9 @@
 # constants.py
 import pygame
 
+# Window title
+GAME_TITLE = "Tensor Bird"
+
 # Screen setup
 SCREEN_WIDTH = 1600
 SCREEN_HEIGHT = 1100

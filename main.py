@@ -140,6 +140,7 @@ def run_neat(config_path):
 
 if __name__ == "__main__":
     pygame.init()
+    pygame.display.set_caption(GAME_TITLE)
     local_dir = os.path.dirname(__file__)
     config_path = os.path.join(local_dir, "config-feedforward.txt")
     run_neat(config_path)
