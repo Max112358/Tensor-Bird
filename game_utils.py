@@ -8,14 +8,22 @@ def check_collision(bird, pipe):
     if (bird_rect.colliderect(pipe.top_rect) or 
         bird_rect.colliderect(pipe.bottom_rect) or 
         bird.y > FLOOR_Y or bird.y < 0):
-        return True
-    return False
+        # Calculate center position of bird
+        center_x = bird.x + BIRD_SIZE // 2
+        center_y = bird.y + BIRD_SIZE // 2
+        return True, (center_x, center_y)  # Return center position
+    return False, None
 
-def draw_game(screen, background, pipes, birds, score):
+def draw_game(screen, background, pipes, birds, score, death_markers=None):
     background.draw(screen)
     
     for pipe in pipes:
         pipe.draw(screen)
+        
+    if death_markers:
+        for marker in death_markers:
+            marker.draw(screen)
+            
     for bird in birds:
         bird.draw(screen)
         
