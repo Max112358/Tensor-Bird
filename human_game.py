@@ -66,9 +66,6 @@ def main():
                 
                 collision, death_pos = check_collision(bird, pipe)
                 if collision:
-                    #print(f"Game Over! Death position: {death_pos}")
-                    #print(f"Bird position: ({bird.x}, {bird.y})")
-                    #print(f"Pipe position: x={pipe.x}, top_rect={pipe.top_rect}, bottom_rect={pipe.bottom_rect}")
                     if death_pos:
                         death_markers.append(DeathMarker(*death_pos))
                     game_over = True
