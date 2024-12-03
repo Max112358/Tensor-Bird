@@ -1,4 +1,6 @@
+# background.py
 import pygame
+from constants import SCALE, PIPE_VELOCITY
 
 class Background:
     def __init__(self, screen_width, screen_height):
@@ -16,7 +18,10 @@ class Background:
         self.width = self.background_img.get_width()
         self.x1 = 0
         self.x2 = self.width  # Second image starts where first image ends
-        self.velocity = 2  # Slower than pipe velocity for parallax effect
+        
+        # Make background move slower than pipes for parallax effect
+        # Background moves at 40% of pipe speed
+        self.velocity = PIPE_VELOCITY * 0.4
         
     def move(self):
         # Move both images to the left
@@ -31,6 +36,5 @@ class Background:
             self.x2 = self.x1 + self.width
             
     def draw(self, screen):
-        # Draw both background images
         screen.blit(self.background_img, (self.x1, 0))
         screen.blit(self.background_img, (self.x2, 0))
