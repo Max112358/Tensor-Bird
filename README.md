@@ -6,6 +6,9 @@ After that type:
 "pip install ."
 to install dependencies. Dont forget that dot!
 
-Then you can type "python main.py" to run the program.
+Then you can type "python main.py" to run the program. This is the AI version.
 
 You can also type "python human_game.py" to run a human playable version. This is just a game, not AI.
+
+This is what it looks like:
+https://youtu.be/WNy5CEa5GZA?si=9RfGFsAcfftHrdKB
