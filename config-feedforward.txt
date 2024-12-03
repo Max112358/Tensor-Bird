@@ -1,6 +1,6 @@
 [NEAT]
 fitness_criterion     = max
-fitness_threshold     = 5000
+fitness_threshold     = 5000000000000
 pop_size             = 20
 reset_on_extinction  = False
 
@@ -25,7 +25,7 @@ bias_replace_rate       = 0.1
 
 # network parameters
 num_hidden              = 0
-num_inputs             = 3
+num_inputs             = 8
 num_outputs            = 1
 feed_forward          = True
 initial_connection     = full

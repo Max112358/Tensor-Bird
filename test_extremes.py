@@ -1,3 +1,4 @@
+# test_main.py
 import pygame
 import neat
 import os
@@ -8,6 +9,26 @@ from pipe import Pipe
 from background import Background
 from game_utils import check_collision, draw_game
 from death_marker import DeathMarker
+
+def create_extreme_pipe(x, is_high):
+    pipe = Pipe(x)
+    if is_high:
+        # Place gap as high as possible while maintaining minimum margins
+        pipe.gap_y = PIPE_TOP_MARGIN
+    else:
+        # Place gap as low as possible while maintaining minimum margins
+        pipe.gap_y = SCREEN_HEIGHT - PIPE_GAP - PIPE_BOTTOM_MARGIN
+    
+    # Recalculate pipe positions based on new gap_y
+    pipe.top_y = pipe.gap_y - pipe.DOWN_PIPE_IMG.get_height()
+    pipe.bottom_y = pipe.gap_y + PIPE_GAP
+    pipe.height = pipe.gap_y
+    
+    # Update collision rectangles
+    pipe.top_rect = pygame.Rect(pipe.x, 0, PIPE_WIDTH, pipe.gap_y)
+    pipe.bottom_rect = pygame.Rect(pipe.x, pipe.bottom_y, PIPE_WIDTH, 
+                                 SCREEN_HEIGHT - pipe.bottom_y)
+    return pipe
 
 def eval_genomes(genomes, config):
     try:
@@ -29,7 +50,14 @@ def eval_genomes(genomes, config):
         
         # Initialize game objects
         background = Background(SCREEN_WIDTH, SCREEN_HEIGHT)
-        pipes = [Pipe(FIRST_PIPE_X + i * PIPE_SPACING) for i in range(VISIBLE_PIPES)]
+        
+        # Create alternating extreme height pipes
+        pipes = []
+        for i in range(VISIBLE_PIPES):
+            is_high = i % 2 == 0  # Alternate between high and low
+            x = FIRST_PIPE_X + i * PIPE_SPACING
+            pipes.append(create_extreme_pipe(x, is_high))
+        
         score = 0
         clock = pygame.time.Clock()
         
@@ -71,26 +99,21 @@ def eval_genomes(genomes, config):
                 # Get the next pipe if available
                 next_pipe = pipes[next_pipe_ind] if next_pipe_ind < len(pipes) else pipes[pipe_ind]
                 
-                # Neural network inputs (now including bird velocity)
+                # Neural network inputs
                 output = nets[x].activate((
-                    #the bird itself
-                    bird.y,  # Bird's height
-                    bird.velocity,  # Bird's current velocity
-                    
-                    #the pipes
-                    abs(bird.y - pipes[pipe_ind].height),  # vertical distance to current pipe's gap
-                    abs(bird.y - pipes[pipe_ind].bottom_y),  # vertical distance to current pipe's bottom
-                    pipes[pipe_ind].x - bird.x,  # horizontal distance to current pipe
-                    abs(bird.y - next_pipe.height),  # vertical distance to next pipe's gap
-                    abs(bird.y - next_pipe.bottom_y),  # vertical distance to next pipe's bottom
-                    next_pipe.x - bird.x  # horizontal istance to next pipe
+                    bird.y,
+                    bird.velocity,
+                    abs(bird.y - pipes[pipe_ind].height),
+                    abs(bird.y - pipes[pipe_ind].bottom_y),
+                    pipes[pipe_ind].x - bird.x,
+                    abs(bird.y - next_pipe.height),
+                    abs(bird.y - next_pipe.bottom_y),
+                    next_pipe.x - bird.x
                 ))
                 
-                # Make the bird jump if output is > 0.5
                 if output[0] > 0.5:
                     bird.jump()
                 
-                # Track best fitness
                 if ge[x].fitness > best_fitness:
                     best_fitness = ge[x].fitness
                     best_genome = ge[x]
@@ -113,14 +136,16 @@ def eval_genomes(genomes, config):
                     elif not pipe.passed and birds[x].x > pipe.x + PIPE_WIDTH:
                         pipe.passed = True
                         score += 1
-                        # Reward for passing pipes
-                        ge[x].fitness += 5
+                        # Extra reward for passing extreme pipes
+                        ge[x].fitness += 8
                     x += 1
             
             # Remove and add new pipes as needed
             while len(pipes) > 0 and pipes[0].x < -PIPE_WIDTH:
                 pipes.pop(0)
-                pipes.append(Pipe(pipes[-1].x + PIPE_SPACING))
+                # Add new pipe with opposite height of the last pipe
+                is_high = not (pipes[-1].gap_y <= PIPE_TOP_MARGIN + 10)  # Check if last pipe was low
+                pipes.append(create_extreme_pipe(pipes[-1].x + PIPE_SPACING, is_high))
             
             # Draw the current game state
             draw_game(SCREEN, background, pipes, birds, score, death_markers)
@@ -130,7 +155,7 @@ def eval_genomes(genomes, config):
     except pygame.error:
         sys.exit()
 
-def run_neat(config_path, checkpoint_file=None):
+def run_neat(config_path):
     try:
         config = neat.config.Config(
             neat.DefaultGenome,
@@ -140,51 +165,22 @@ def run_neat(config_path, checkpoint_file=None):
             config_path
         )
         
-        if checkpoint_file and os.path.exists(checkpoint_file):
-            print(f"Loading from checkpoint: {checkpoint_file}")
-            pop = neat.Checkpointer.restore_checkpoint(checkpoint_file)
-            start_gen = pop.generation
-            
-            # Reconstruct population from species
-            all_members = {}
-            for species in pop.species.species.values():
-                all_members.update(species.members)
-            pop.population = all_members
-            
-        else:
-            if checkpoint_file:
-                print(f"Checkpoint file {checkpoint_file} not found. Starting fresh.")
-            pop = neat.Population(config)
-            start_gen = 0
-        
+        pop = neat.Population(config)
         pop.add_reporter(neat.StdOutReporter(True))
         stats = neat.StatisticsReporter()
         pop.add_reporter(stats)
-        checkpointer = neat.Checkpointer(5, filename_prefix='neat-checkpoint-')
-        pop.add_reporter(checkpointer)
         
-        remaining_gens = 50 - start_gen
-        winner = pop.run(eval_genomes, remaining_gens)
+        winner = pop.run(eval_genomes, 50)
         print('\nBest genome:\n{!s}'.format(winner))
         
     except KeyboardInterrupt:
-        print("\nSaving checkpoint before exiting...")
-        current_gen = pop.generation
-        # Save checkpoint with correct number of arguments
-        checkpointer.save_checkpoint(config, pop, pop.species, current_gen)
-        print(f"Checkpoint saved as neat-checkpoint-{current_gen}")
+        print("\nTraining interrupted by user")
     except SystemExit:
         print("\nTraining terminated")
 
 if __name__ == "__main__":
     pygame.init()
-    pygame.display.set_caption(GAME_TITLE)
+    pygame.display.set_caption("EXTREME " + GAME_TITLE)
     local_dir = os.path.dirname(__file__)
     config_path = os.path.join(local_dir, "config-feedforward.txt")
-    
-    # Parse command line arguments
-    checkpoint_file = None
-    if len(sys.argv) > 2 and sys.argv[1] == '-load':
-        checkpoint_file = sys.argv[2]
-    
-    run_neat(config_path, checkpoint_file)
+    run_neat(config_path)
