@@ -1,13 +1,30 @@
 # constants.py
+import os
+# Base/reference resolution
+BASE_WIDTH = 1600
+BASE_HEIGHT = 900
+# Initialize pygame before getting screen info
 import pygame
+pygame.init()
+# Get current screen info
+screen_info = pygame.display.Info()
+MARGIN = 120  # Margin from screen edges
+# Calculate available space
+available_width = screen_info.current_w - MARGIN
+available_height = screen_info.current_h - MARGIN
+# Use whichever is smaller: base size or available space
+SCREEN_WIDTH = min(BASE_WIDTH, available_width)
+SCREEN_HEIGHT = min(BASE_HEIGHT, available_height)
 
 # Window title
 GAME_TITLE = "Tensor Bird"
 
-# Screen setup
-SCREEN_WIDTH = 1600
-SCREEN_HEIGHT = 1100
+# Screen setup - center the window
+os_x_pos = (screen_info.current_w - SCREEN_WIDTH) // 2
+os_y_pos = (screen_info.current_h - SCREEN_HEIGHT) // 2
+os.environ['SDL_VIDEO_WINDOW_POS'] = f"{os_x_pos},{os_y_pos}"
 SCREEN = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+
 
 # Colors
 SKY_BLUE = (135, 206, 235)
