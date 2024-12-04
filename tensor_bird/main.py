@@ -71,19 +71,19 @@ def eval_genomes(genomes, config):
                 # Get the next pipe if available
                 next_pipe = pipes[next_pipe_ind] if next_pipe_ind < len(pipes) else pipes[pipe_ind]
                 
-                # Neural network inputs
+                # Neural network inputs (now including bird velocity)
                 output = nets[x].activate((
                     #the bird itself
                     bird.y,  # Bird's height
                     bird.velocity,  # Bird's current velocity
                     
                     #the pipes
-                    abs(bird.y - pipes[pipe_ind].height),  # vertical distance to top of current pipe's gap
-                    abs(bird.y - pipes[pipe_ind].bottom_y),  # vertical distance to top of bottom pipe
+                    abs(bird.y - pipes[pipe_ind].height),  # vertical distance to current pipe's gap
+                    abs(bird.y - pipes[pipe_ind].bottom_y),  # vertical distance to current pipe's bottom
                     pipes[pipe_ind].x - bird.x,  # horizontal distance to current pipe
-                    abs(bird.y - next_pipe.height),  # vertical distance to top of next pipe's gap
-                    abs(bird.y - next_pipe.bottom_y),  # vertical distance to top of next bottom pipe
-                    next_pipe.x - bird.x  # horizontal distance to next pipe
+                    abs(bird.y - next_pipe.height),  # vertical distance to next pipe's gap
+                    abs(bird.y - next_pipe.bottom_y),  # vertical distance to next pipe's bottom
+                    next_pipe.x - bird.x  # horizontal istance to next pipe
                 ))
                 
                 # Make the bird jump if output is > 0.5
