@@ -1,79 +1,192 @@
 [NEAT]
+# How to measure fitness - 'max' means higher fitness values are better
 fitness_criterion     = max
+
+# If a genome reaches this fitness level, evolution will stop
+# Set very high to run indefinitely
 fitness_threshold     = 5000000000000
+
+# Number of genomes (birds) in each generation
+# Smaller population for faster iterations but less diversity
 pop_size             = 20
+
+# Whether to reset population if all species die
+# False means try to recover from existing population
 reset_on_extinction  = False
 
 [DefaultGenome]
-# node activation options
+# ACTIVATION FUNCTIONS
+
+# tanh (Hyperbolic Tangent):
+# Output range: [-1, 1]
+# Smooth, S-shaped curve
+# Good for problems requiring negative outputs
+# Currently set as your default: activation_default = tanh
+
+# sigmoid:
+# Output range: [0, 1]
+# Classic S-shaped curve
+# Good for probability-like outputs
+# Most commonly used activation function
+
+# relu (Rectified Linear Unit):
+# Output range: [0, ∞)
+# Linear for positive inputs, zero for negative
+# Helps avoid vanishing gradient problem
+# Very popular in modern neural networks
+
+# sin (Sine):
+# Output range: [-1, 1]
+# Periodic function
+# Good for cyclical or wave-like patterns
+# Less commonly used
+
+
+# gauss (Gaussian):
+# Bell-shaped curve
+# Output peaks at input=0
+# Good for radial basis function networks
+
+# abs (Absolute Value):
+# Makes all inputs positive
+# Linear but always positive
+# Simple but can be useful
+
+# identity:
+# Output equals input
+# No transformation
+# Used for linear relationships
+
+# clamped:
+# Like identity but clamped to [-1, 1]
+# Prevents extreme values
+
+# inv (Inverse):
+# Returns 1/x
+# Handle division by zero carefully
+# Used in specific mathematical operations
+
+# log (Logarithmic):
+# Natural logarithm
+# Good for compressing large input ranges
+# Handle negative inputs carefully
+
+# Default activation function when creating new nodes
 activation_default      = tanh
+# Probability of switching a node's activation function during mutation (like tanh, sigmoid, etc.)
 activation_mutate_rate = 0.0
+# List of possible activation functions that nodes can use
 activation_options     = tanh
 
-# node add/remove rates
+# NODE (NEURON) ADD/REMOVE
+# Probability of adding a new node during mutation
 node_add_prob           = 0.2
-node_delete_prob        = 0.2
+# Probability of removing a node during mutation
+node_delete_prob        = 0.3
 
-# node bias options
+# BIAS PARAMETERS
+# Mean (average) value for initialized biases
 bias_init_mean          = 0.0
-bias_init_stdev         = 1.0
-bias_max_value          = 30.0
-bias_min_value          = -30.0
-bias_mutate_power       = 0.5
+# Standard deviation (spread) of initialized biases
+bias_init_stdev         = 0.1
+# Maximum value a bias can take
+bias_max_value          = 5.0
+# Minimum value a bias can take
+bias_min_value          = -5.0
+# How much a bias can change during mutation
+bias_mutate_power       = 0.15
+# Probability of mutating a bias value
 bias_mutate_rate        = 0.7
+# Probability of completely replacing a bias with a new value
 bias_replace_rate       = 0.1
 
-# network parameters
+# NETWORK STRUCTURE
+# Initial number of hidden nodes (grows through evolution)
 num_hidden              = 0
-num_inputs             = 8
+# Number of input nodes (matches number of input parameters)
+num_inputs             = 3
+# Number of output nodes (1 for jump/don't jump)
 num_outputs            = 1
-feed_forward          = True
+# If True, network must be acyclic (no recurrent connections)
+feed_forward           = True
+# How to create initial network ('full' = all nodes connected)
 initial_connection     = full
 
-# node aggregation options
+# NODE AGGREGATION
+# How nodes combine inputs (e.g., sum all inputs)
 aggregation_default     = sum
+# Probability of changing a node's aggregation function
 aggregation_mutate_rate = 0.0
+# List of possible aggregation functions
 aggregation_options     = sum
 
-# node response options
+# NODE RESPONSE
+# Default value for response scaling
 response_init_mean      = 1.0
+# Spread of initial response scaling values
 response_init_stdev     = 0.0
+# Maximum response scaling value
 response_max_value      = 30.0
+# Minimum response scaling value
 response_min_value      = -30.0
+# How much response scaling can change during mutation
 response_mutate_power   = 0.0
+# Probability of mutating response scaling
 response_mutate_rate    = 0.0
+# Probability of replacing response scaling with new value
 response_replace_rate   = 0.0
 
-# connection add/remove rates
+# CONNECTION PARAMETERS
+# Probability of adding a new connection during mutation
 conn_add_prob           = 0.5
-conn_delete_prob        = 0.5
+# Probability of removing a connection during mutation
+conn_delete_prob        = 0.1
 
-# connection enable options
+# CONNECTION ENABLE/DISABLE
+# Whether new connections start as enabled
 enabled_default         = True
+# Probability of toggling enabled/disabled state
 enabled_mutate_rate     = 0.01
 
-# connection weight options
+# CONNECTION WEIGHTS
+# Mean value for initialized connection weights
 weight_init_mean        = 0.0
+# Standard deviation for initialized weights
 weight_init_stdev       = 1.0
+# Type of weight initialization distribution
 weight_init_type        = gaussian
-weight_max_value        = 30
-weight_min_value        = -30
+# Maximum value for a connection weight
+weight_max_value        = 30.0
+# Minimum value for a connection weight
+weight_min_value        = -30.0
+# How much a weight can change during mutation
 weight_mutate_power     = 0.5
+# Probability of mutating a weight
 weight_mutate_rate      = 0.8
+# Probability of replacing a weight with a new value
 weight_replace_rate     = 0.1
 
-# genome compatibility options
+# SPECIATION PARAMETERS
+# How much topology differences affect genome distance
 compatibility_disjoint_coefficient = 1.0
+# How much weight differences affect genome distance
 compatibility_weight_coefficient   = 0.5
 
 [DefaultSpeciesSet]
+# Maximum genome distance for same species
+# Lower = more species, higher = fewer species
 compatibility_threshold = 3.0
 
 [DefaultStagnation]
+# Which genome to use for species fitness ('max' = best genome)
 species_fitness_func = max
+# Generations before species considered stagnant
 max_stagnation      = 20
+# Number of species protected from stagnation
 species_elitism     = 2
 
 [DefaultReproduction]
+# Number of best genomes to copy unchanged to next generation
 elitism            = 2
+# Fraction of species members that can reproduce
 survival_threshold = 0.2

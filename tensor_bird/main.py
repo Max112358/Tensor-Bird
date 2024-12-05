@@ -11,7 +11,6 @@ from death_marker import DeathMarker
 
 def eval_genomes(genomes, config):
     try:
-        # Initialize lists to track active birds and networks
         birds = []
         nets = []
         ge = []
@@ -19,7 +18,6 @@ def eval_genomes(genomes, config):
         best_genome = None
         best_fitness = -float('inf')
         
-        # Create neural networks for each genome
         for _, genome in genomes:
             net = neat.nn.FeedForwardNetwork.create(genome, config)
             nets.append(net)
@@ -27,7 +25,6 @@ def eval_genomes(genomes, config):
             genome.fitness = 0
             ge.append(genome)
         
-        # Initialize game objects
         background = Background(SCREEN_WIDTH, SCREEN_HEIGHT)
         pipes = [Pipe(FIRST_PIPE_X + i * PIPE_SPACING) for i in range(VISIBLE_PIPES)]
         score = 0
@@ -37,7 +34,6 @@ def eval_genomes(genomes, config):
         while run and len(birds) > 0:
             clock.tick(FPS)
             
-            # Handle quit event
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     current_best = max(ge, key=lambda x: x.fitness)
@@ -46,10 +42,8 @@ def eval_genomes(genomes, config):
                     pygame.quit()
                     sys.exit()
             
-            # Move background for parallax effect
             background.move()
             
-            # Move and clean up death markers
             for marker in death_markers[:]:
                 marker.move()
                 if marker.is_offscreen():
@@ -63,6 +57,21 @@ def eval_genomes(genomes, config):
                     pipe_ind = 1
                     next_pipe_ind = 2
             
+            # Check if any bird has reached fitness threshold
+            threshold_reached = False
+            for genome in ge:
+                if genome.fitness >= config.fitness_threshold:
+                    threshold_reached = True
+                    best_genome = genome
+                    best_fitness = genome.fitness
+                    print(f"\nFitness threshold {config.fitness_threshold} reached!")
+                    print(f"Best fitness achieved: {best_fitness}")
+                    run = False
+                    break
+                    
+            if threshold_reached:
+                break
+            
             # Update all birds
             for x, bird in enumerate(birds):
                 bird.move()
@@ -71,26 +80,20 @@ def eval_genomes(genomes, config):
                 # Get the next pipe if available
                 next_pipe = pipes[next_pipe_ind] if next_pipe_ind < len(pipes) else pipes[pipe_ind]
                 
-                # Neural network inputs (now including bird velocity)
+                # Calculate center points
+                current_pipe_center = pipes[pipe_ind].gap_y + (PIPE_GAP / 2)
+                next_pipe_center = next_pipe.gap_y + (PIPE_GAP / 2)
+                
+                # Simplified inputs: just bird Y position and pipe centers
                 output = nets[x].activate((
-                    #the bird itself
-                    bird.y,  # Bird's height
-                    bird.velocity,  # Bird's current velocity
-                    
-                    #the pipes
-                    abs(bird.y - pipes[pipe_ind].height),  # vertical distance to current pipe's gap
-                    abs(bird.y - pipes[pipe_ind].bottom_y),  # vertical distance to current pipe's bottom
-                    pipes[pipe_ind].x - bird.x,  # horizontal distance to current pipe
-                    abs(bird.y - next_pipe.height),  # vertical distance to next pipe's gap
-                    abs(bird.y - next_pipe.bottom_y),  # vertical distance to next pipe's bottom
-                    next_pipe.x - bird.x  # horizontal istance to next pipe
+                    bird.y / SCREEN_HEIGHT,  # Normalized bird height
+                    current_pipe_center / SCREEN_HEIGHT,  # Normalized current pipe center
+                    next_pipe_center / SCREEN_HEIGHT,  # Normalized next pipe center
                 ))
                 
-                # Make the bird jump if output is > 0.5
                 if output[0] > 0.5:
                     bird.jump()
                 
-                # Track best fitness
                 if ge[x].fitness > best_fitness:
                     best_fitness = ge[x].fitness
                     best_genome = ge[x]
@@ -99,7 +102,6 @@ def eval_genomes(genomes, config):
             for pipe in pipes:
                 pipe.move()
                 
-                # Check each bird for collisions
                 x = 0
                 while x < len(birds):
                     collision, death_pos = check_collision(birds[x], pipe)
@@ -113,16 +115,13 @@ def eval_genomes(genomes, config):
                     elif not pipe.passed and birds[x].x > pipe.x + PIPE_WIDTH:
                         pipe.passed = True
                         score += 1
-                        # Reward for passing pipes
                         ge[x].fitness += 5
                     x += 1
             
-            # Remove and add new pipes as needed
             while len(pipes) > 0 and pipes[0].x < -PIPE_WIDTH:
                 pipes.pop(0)
                 pipes.append(Pipe(pipes[-1].x + PIPE_SPACING))
             
-            # Draw the current game state
             draw_game(SCREEN, background, pipes, birds, score, death_markers)
         
         return best_genome
@@ -170,7 +169,6 @@ def run_neat(config_path, checkpoint_file=None):
     except KeyboardInterrupt:
         print("\nSaving checkpoint before exiting...")
         current_gen = pop.generation
-        # Save checkpoint with correct number of arguments
         checkpointer.save_checkpoint(config, pop, pop.species, current_gen)
         print(f"Checkpoint saved as neat-checkpoint-{current_gen}")
     except SystemExit:

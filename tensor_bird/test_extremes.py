@@ -1,4 +1,4 @@
-# test_main.py
+# test_extremes.py
 import pygame
 import neat
 import os
@@ -91,6 +91,21 @@ def eval_genomes(genomes, config):
                     pipe_ind = 1
                     next_pipe_ind = 2
             
+            # Check if any bird has reached fitness threshold
+            threshold_reached = False
+            for genome in ge:
+                if genome.fitness >= config.fitness_threshold:
+                    threshold_reached = True
+                    best_genome = genome
+                    best_fitness = genome.fitness
+                    print(f"\nFitness threshold {config.fitness_threshold} reached!")
+                    print(f"Best fitness achieved: {best_fitness}")
+                    run = False
+                    break
+                    
+            if threshold_reached:
+                break
+            
             # Update all birds
             for x, bird in enumerate(birds):
                 bird.move()
@@ -99,16 +114,18 @@ def eval_genomes(genomes, config):
                 # Get the next pipe if available
                 next_pipe = pipes[next_pipe_ind] if next_pipe_ind < len(pipes) else pipes[pipe_ind]
                 
-                # Neural network inputs
+                # Normalized neural network inputs
                 output = nets[x].activate((
-                    bird.y,
-                    bird.velocity,
-                    abs(bird.y - pipes[pipe_ind].height),
-                    abs(bird.y - pipes[pipe_ind].bottom_y),
-                    pipes[pipe_ind].x - bird.x,
-                    abs(bird.y - next_pipe.height),
-                    abs(bird.y - next_pipe.bottom_y),
-                    next_pipe.x - bird.x
+                    bird.y / SCREEN_HEIGHT,  # Normalized height (0 to 1)
+                    bird.velocity / MAX_FALL_SPEED,  # Normalized velocity (-1 to 1)
+                    
+                    # Normalize all distances
+                    abs(bird.y - pipes[pipe_ind].height) / SCREEN_HEIGHT,
+                    abs(bird.y - pipes[pipe_ind].bottom_y) / SCREEN_HEIGHT,
+                    (pipes[pipe_ind].x - bird.x) / SCREEN_WIDTH,
+                    abs(bird.y - next_pipe.height) / SCREEN_HEIGHT,
+                    abs(bird.y - next_pipe.bottom_y) / SCREEN_HEIGHT,
+                    (next_pipe.x - bird.x) / SCREEN_WIDTH
                 ))
                 
                 if output[0] > 0.5:
@@ -155,7 +172,7 @@ def eval_genomes(genomes, config):
     except pygame.error:
         sys.exit()
 
-def run_neat(config_path):
+def run_neat(config_path, checkpoint_file=None):
     try:
         config = neat.config.Config(
             neat.DefaultGenome,
@@ -165,16 +182,38 @@ def run_neat(config_path):
             config_path
         )
         
-        pop = neat.Population(config)
+        if checkpoint_file and os.path.exists(checkpoint_file):
+            print(f"Loading from checkpoint: {checkpoint_file}")
+            pop = neat.Checkpointer.restore_checkpoint(checkpoint_file)
+            start_gen = pop.generation
+            
+            # Reconstruct population from species
+            all_members = {}
+            for species in pop.species.species.values():
+                all_members.update(species.members)
+            pop.population = all_members
+            
+        else:
+            if checkpoint_file:
+                print(f"Checkpoint file {checkpoint_file} not found. Starting fresh.")
+            pop = neat.Population(config)
+            start_gen = 0
+        
         pop.add_reporter(neat.StdOutReporter(True))
         stats = neat.StatisticsReporter()
         pop.add_reporter(stats)
+        checkpointer = neat.Checkpointer(5, filename_prefix='extreme-neat-checkpoint-')
+        pop.add_reporter(checkpointer)
         
-        winner = pop.run(eval_genomes, 50)
+        remaining_gens = 50 - start_gen
+        winner = pop.run(eval_genomes, remaining_gens)
         print('\nBest genome:\n{!s}'.format(winner))
         
     except KeyboardInterrupt:
-        print("\nTraining interrupted by user")
+        print("\nSaving checkpoint before exiting...")
+        current_gen = pop.generation
+        checkpointer.save_checkpoint(config, pop, pop.species, current_gen)
+        print(f"Checkpoint saved as extreme-neat-checkpoint-{current_gen}")
     except SystemExit:
         print("\nTraining terminated")
 
@@ -183,4 +222,10 @@ if __name__ == "__main__":
     pygame.display.set_caption("EXTREME " + GAME_TITLE)
     local_dir = os.path.dirname(__file__)
     config_path = os.path.join(local_dir, "config-feedforward.txt")
-    run_neat(config_path)
+    
+    # Parse command line arguments
+    checkpoint_file = None
+    if len(sys.argv) > 2 and sys.argv[1] == '-load':
+        checkpoint_file = sys.argv[2]
+    
+    run_neat(config_path, checkpoint_file)

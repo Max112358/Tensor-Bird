@@ -60,3 +60,15 @@ MAX_FALL_SPEED = SCREEN_HEIGHT * 0.00727  # Scales with screen height
 
 # Game parameters
 VISIBLE_PIPES = 5  # Number of pipes visible at once
+
+""" print("Screen dimensions:", SCREEN_WIDTH, SCREEN_HEIGHT)
+print("Bird properties:")
+print(f"- Size: {BIRD_SIZE}")
+print(f"- Jump velocity: {BIRD_JUMP_VELOCITY}")
+print(f"- Max fall speed: {MAX_FALL_SPEED}")
+print(f"- Gravity: {GRAVITY}")
+print("Pipe properties:")
+print(f"- Width: {PIPE_WIDTH}")
+print(f"- Gap: {PIPE_GAP}")
+print(f"- Spacing: {PIPE_SPACING}")
+print(f"- Velocity: {PIPE_VELOCITY}") """
