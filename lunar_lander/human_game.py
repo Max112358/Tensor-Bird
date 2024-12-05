@@ -22,6 +22,7 @@ class HumanLunarLander:
         # Initialize fonts at different sizes
         self.score_font = pygame.font.Font(None, int(SCREEN_HEIGHT * 0.091))
         self.info_font = pygame.font.Font(None, int(SCREEN_HEIGHT * 0.05))
+        self.debug_font = pygame.font.Font(None, int(SCREEN_HEIGHT * 0.033))
         self.game_over_font = pygame.font.Font(None, int(SCREEN_HEIGHT * 0.067))
         
         # Pre-render game over text and controls help
@@ -38,17 +39,11 @@ class HumanLunarLander:
         self.BLUE = (0, 0, 255)
         self.BLACK = (0, 0, 0)
         self.GREEN = (0, 255, 0)
+        self.YELLOW = (255, 255, 0)
         
         # Initialize game state
         self.reset()
         
-    def reset(self):
-        """Reset the game state"""
-        start_x = SCREEN_WIDTH * 0.5
-        start_y = SCREEN_HEIGHT * 0.1
-        self.lander = Lander(start_x, start_y)
-        self.game_over = False
-        self.score = 0
         
     def handle_input(self):
         """
@@ -101,29 +96,69 @@ class HumanLunarLander:
         pygame.draw.line(self.screen, self.WHITE, *left_leg)
         pygame.draw.line(self.screen, self.WHITE, *right_leg)
         
+        # Draw guidance line to pad center (training target)
+        pad_center = (self.terrain.landing_pad_x, self.terrain.ground_height)
+        pygame.draw.line(self.screen, self.BLUE, (self.lander.x, self.lander.y), pad_center, 1)
+        
+        # Draw velocity vector (scaled)
+        vel_scale = 2.0
+        pygame.draw.line(
+            self.screen,
+            self.YELLOW,
+            (self.lander.x, self.lander.y),
+            (self.lander.x + self.lander.velocity_x * vel_scale, 
+             self.lander.y + self.lander.velocity_y * vel_scale),
+            2
+        )
+        
+        # Draw angle indicator
+        angle_radius = 30
+        angle_end = (
+            self.lander.x + math.cos(self.lander.angle) * angle_radius,
+            self.lander.y + math.sin(self.lander.angle) * angle_radius
+        )
+        pygame.draw.line(self.screen, self.GREEN, (self.lander.x, self.lander.y), angle_end, 2)
+        
         # Draw UI elements
         # Score
         score_text = self.score_font.render(str(int(self.score)), True, self.WHITE)
         score_rect = score_text.get_rect(center=(SCREEN_WIDTH/2, SCREEN_HEIGHT * 0.091))
         self.screen.blit(score_text, score_rect)
         
-        # Velocity
-        velocity_text = self.info_font.render(
-            f"Velocity: {abs(self.lander.velocity_x):.1f}, {abs(self.lander.velocity_y):.1f}", 
-            True, 
-            self.WHITE
-        )
-        self.screen.blit(velocity_text, (10, 10))
+        # Training metrics (left side)
+        y_offset = 10
+        line_height = 25
         
-        # Fuel
-        fuel_text = self.info_font.render(
-            f"Fuel: {int(self.lander.fuel)}", 
-            True, 
-            self.WHITE
-        )
-        self.screen.blit(fuel_text, (10, 40))
+        # Distance to pad
+        distance_x = abs(self.lander.x - self.terrain.landing_pad_x)
+        distance_y = abs(self.lander.y - self.terrain.ground_height)
+        metrics = [
+            f"Dist to pad: {distance_x:.1f}x, {distance_y:.1f}y",
+            f"Velocity: {abs(self.lander.velocity_x):.1f}x, {abs(self.lander.velocity_y):.1f}y",
+            f"Angle: {math.degrees(self.lander.angle):.1f}°",
+            f"Angular vel: {math.degrees(self.lander.angular_velocity):.1f}°/s",
+            f"Fuel: {int(self.lander.fuel)}"
+        ]
         
-        # Always show controls
+        # Add safety thresholds
+        safety_metrics = [
+            f"Safe vel: <{SAFE_LANDING_VELOCITY:.1f}",
+            f"Safe angle: <{SAFE_LANDING_ANGLE:.1f}°",
+        ]
+        
+        # Render metrics
+        for i, metric in enumerate(metrics):
+            color = self.WHITE
+            text = self.debug_font.render(metric, True, color)
+            self.screen.blit(text, (10, y_offset + i * line_height))
+            
+        # Render safety thresholds (right side)
+        for i, metric in enumerate(safety_metrics):
+            color = self.WHITE
+            text = self.debug_font.render(metric, True, color)
+            self.screen.blit(text, (SCREEN_WIDTH - 150, y_offset + i * line_height))
+        
+        # Controls at bottom
         self.screen.blit(self.controls_text, self.controls_rect)
         
         # Game over text if needed
@@ -206,7 +241,7 @@ class HumanLunarLander:
         # Create new lander
         start_x = SCREEN_WIDTH * 0.5
         start_y = SCREEN_HEIGHT * 0.1
-        self.lander = Lander(start_x, start_y)
+        self.lander = Lander(start_x, start_y, self.terrain)
         
         # Reset game state
         self.game_over = False

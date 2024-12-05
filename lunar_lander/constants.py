@@ -21,6 +21,7 @@ OUT_OF_BOUNDS_PENALTY = -100.0
 
 # Safe landing parameters
 SAFE_LANDING_VELOCITY = 80.0  # Maximum safe landing velocity
+SAFE_LANDING_ANGLE = 15.0  # Maximum safe landing velocity
 LANDING_PAD_TOLERANCE = 5    # How close to pad height counts as landing
 
 # Physics constants 
@@ -38,7 +39,7 @@ DT = 1.0 / FPS
 LANDER_WIDTH = 20
 LANDER_HEIGHT = 30
 LEG_LENGTH = 10
-INITIAL_FUEL = 1000.0
+INITIAL_FUEL = 200.0
 MAIN_ENGINE_FUEL_COST = 1.0
 SIDE_ENGINE_FUEL_COST = 0.5
 

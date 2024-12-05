@@ -1,10 +1,11 @@
 from rocket_physics import RocketPhysics, PhysicsConfig, PhysicsState
 import numpy as np
 import math
+import terrain as Terrain
 from constants import *
 
 class Lander:
-    def __init__(self, x: float, y: float):
+    def __init__(self, x: float, y: float, terrain: Terrain):
         # Initialize physics configuration with much larger force values
         physics_config = PhysicsConfig(
             mass=100.0,  # kg
@@ -45,6 +46,16 @@ class Lander:
         self.active = True
         self.terminated = False
         self.terminate_reason = None
+        
+        #the level
+        self.terrain = terrain
+        
+        # thruster state tracking
+        self.thrusters = {
+            'main': False,
+            'left': False,
+            'right': False
+        }
         
     @property
     def x(self) -> float:
@@ -96,8 +107,8 @@ class Lander:
         if not self.active or self.fuel <= 0:
             return self.get_state()
         
-        # Convert action to thruster states
-        thrusters = {
+        # Reset thruster states
+        self.thrusters = {
             'main': False,
             'left': False,
             'right': False
@@ -105,25 +116,39 @@ class Lander:
         
         # Update thrusters based on action
         if action == 1:  # Left engine
-            thrusters['left'] = True
+            self.thrusters['left'] = True
             self.fuel -= SIDE_ENGINE_FUEL_COST
         elif action == 2:  # Main engine
-            thrusters['main'] = True
+            self.thrusters['main'] = True
             self.fuel -= MAIN_ENGINE_FUEL_COST
         elif action == 3:  # Right engine
-            thrusters['right'] = True
+            self.thrusters['right'] = True
             self.fuel -= SIDE_ENGINE_FUEL_COST
             
         self.fuel = max(0, self.fuel)
         
         # Update physics
-        self.physics.step(thrusters)
-
+        self.physics.step(self.thrusters)
         
         return self.get_state()
+        
+    def get_color(self) -> tuple:
+        """Return the appropriate color based on lander state"""
+        if not self.active:
+            return (0, 0, 255)  # Blue for dead/landed
+        elif any(self.thrusters.values()):
+            return (255, 0, 0)  # Red for any thruster firing
+        else:
+            return (255, 255, 255)  # White for alive but drifting
     
     def get_state(self) -> np.ndarray:
         """Return the normalized state vector"""
+        landing_pad_center_x = self.terrain.landing_pad_x
+        landing_pad_center_y = self.terrain.ground_height
+        
+        distance_to_pad_x = abs(self.x - landing_pad_center_x) / self.terrain.width
+        distance_to_pad_y = abs(self.y - landing_pad_center_y) / self.terrain.height
+        
         return np.array([
             self.x / POS_NORMALIZATION - 1,  # Normalized x position
             self.y / POS_NORMALIZATION - 1,  # Normalized y position
@@ -131,8 +156,8 @@ class Lander:
             self.velocity_y / VEL_NORMALIZATION,  # Normalized y velocity
             self.angle / ANGLE_NORMALIZATION,  # Normalized angle
             self.angular_velocity,  # Angular velocity
-            float(self.left_leg_contact),  # Left leg contact
-            float(self.right_leg_contact),  # Right leg contact
+            distance_to_pad_x,  # Normalized distance to landing pad center (x)
+            distance_to_pad_y,  # Normalized distance to landing pad center (y)
             self.fuel / INITIAL_FUEL  # Normalized fuel level
         ])
         

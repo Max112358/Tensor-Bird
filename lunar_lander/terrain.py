@@ -2,7 +2,7 @@ from typing import List, Tuple
 import numpy as np
 import random
 from constants import (SAFE_LANDING_VELOCITY, LANDING_PAD_TOLERANCE, 
-                      LANDING_PAD_WIDTH, TERRAIN_ROUGHNESS)
+                      LANDING_PAD_WIDTH, TERRAIN_ROUGHNESS, SAFE_LANDING_ANGLE)
 
 class Terrain:
     def __init__(self, screen_width: int, screen_height: int):
@@ -76,11 +76,11 @@ class Terrain:
         vertices = lander.get_vertices()
         left_leg, right_leg = lander.get_leg_positions()
         
-        print("\nDEBUG: Collision Check")
+        """ print("\nDEBUG: Collision Check")
         print(f"Lander center: ({x}, {y})")
         print(f"Lander vertices: {vertices}")
         print(f"Left leg: {left_leg}")
-        print(f"Right leg: {right_leg}")
+        print(f"Right leg: {right_leg}") """
         
         # Combine all points to check
         points_to_check = vertices + [left_leg[1], right_leg[1]]
@@ -101,11 +101,11 @@ class Terrain:
                     
                     # Debug point vs terrain height
                     if point_y > terrain_y + tolerance:
-                        print(f"DEBUG: Collision detected!")
+                        """ print(f"DEBUG: Collision detected!")
                         print(f"Point type: {point_type}")
                         print(f"Point position: ({point_x}, {point_y})")
                         print(f"Terrain height at point: {terrain_y}")
-                        print(f"Terrain segment: ({x1}, {y1}) to ({x2}, {y2})")
+                        print(f"Terrain segment: ({x1}, {y1}) to ({x2}, {y2})") """
                         return True
                         
         return False
@@ -121,7 +121,7 @@ class Terrain:
         left_leg, right_leg = lander.get_leg_positions()
         left_foot = left_leg[1]
         right_foot = right_leg[1]
-        
+        """ 
         print("\nDEBUG: Landing Check")
         print(f"Pad bounds: {pad_left} to {pad_right}")
         print(f"Pad height: {self.ground_height}")
@@ -129,7 +129,7 @@ class Terrain:
         print(f"Right foot position: {right_foot}")
         print(f"Vertical velocity: {velocity_y}")
         print(f"Lander angle: {lander.angle}")
-        
+         """
         # Check each landing condition individually
         left_foot_in_bounds = pad_left <= left_foot[0] <= pad_right
         right_foot_in_bounds = pad_left <= right_foot[0] <= pad_right
@@ -140,8 +140,9 @@ class Terrain:
         feet_at_height = left_foot_height_ok and right_foot_height_ok
         
         velocity_ok = abs(velocity_y) < SAFE_LANDING_VELOCITY
-        angle_ok = abs(lander.angle) < 0.3  # TODO: Should also use a constant for max landing angle
+        angle_ok = abs(lander.angle) < SAFE_LANDING_ANGLE 
         
+        """ 
         print("\nDEBUG: Landing Conditions")
         print(f"Left foot in bounds: {left_foot_in_bounds}")
         print(f"Right foot in bounds: {right_foot_in_bounds}")
@@ -149,6 +150,7 @@ class Terrain:
         print(f"Right foot at correct height: {right_foot_height_ok}")
         print(f"Safe vertical velocity: {velocity_ok}")
         print(f"Safe angle: {angle_ok}")
+         """
         
         landing_successful = (
             feet_in_bounds and
@@ -157,5 +159,5 @@ class Terrain:
             angle_ok
         )
         
-        print(f"Landing successful: {landing_successful}")
+        #print(f"Landing successful: {landing_successful}")
         return landing_successful

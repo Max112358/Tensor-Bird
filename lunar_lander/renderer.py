@@ -5,8 +5,34 @@ from terrain import Terrain
 class Renderer:
     def __init__(self, width: int, height: int):
         pygame.init()
-        self.screen = pygame.display.set_mode((width, height))
+        
+        # Set window flags for better background behavior
+        flags = pygame.HWSURFACE | pygame.DOUBLEBUF | pygame.SHOWN
+        
+        # Create window with flags
+        self.screen = pygame.display.set_mode((width, height), flags)
         pygame.display.set_caption("Multi Lunar Lander")
+        
+        # Configure window for background rendering while maintaining taskbar visibility
+        info = pygame.display.get_wm_info()
+        if 'window' in info:  # Check if we can get the window handle
+            try:
+                import ctypes
+                if hasattr(ctypes, 'windll'):  # Windows specific
+                    hwnd = info['window']
+                    # Set window style to allow background rendering while keeping taskbar visibility
+                    GWL_EXSTYLE = -20
+                    WS_EX_APPWINDOW = 0x40000
+                    WS_EX_COMPOSITED = 0x02000000
+                    # Combine flags to get both behaviors
+                    style = WS_EX_APPWINDOW | WS_EX_COMPOSITED
+                    ctypes.windll.user32.SetWindowLongW(hwnd, GWL_EXSTYLE, style)
+            except Exception:
+                pass  # Fail silently if we can't set window styles
+        
+        # Track window states
+        self.has_focus = True
+        self.running = True
         
         # Colors
         self.WHITE = (255, 255, 255)
@@ -14,7 +40,22 @@ class Renderer:
         self.BLUE = (0, 0, 255)
         self.BLACK = (0, 0, 0)
         
-    def render(self, landers: list[Lander], terrain: Terrain):
+    def render(self, landers: list[Lander], terrain: Terrain) -> bool:
+        """Returns False if the window should close, True otherwise"""
+        # Handle window events
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.running = False
+                return False
+            elif event.type == pygame.ACTIVEEVENT and event.state == 2:
+                self.has_focus = event.gain
+            elif event.type in (pygame.VIDEOEXPOSE, pygame.WINDOWENTER):
+                pygame.display.update()
+                
+        if not self.running:
+            return False
+                
+        # Always render regardless of focus state
         self.screen.fill(self.BLACK)
         
         # Draw terrain
@@ -30,17 +71,21 @@ class Renderer:
             4
         )
         
-        # Draw landers
+        # Draw landers with appropriate colors
         for lander in landers:
+            color = lander.get_color()
+            
             # Draw main body
-            pygame.draw.polygon(self.screen, self.WHITE, lander.get_vertices())
+            pygame.draw.polygon(self.screen, color, lander.get_vertices())
             
             # Draw legs
             left_leg, right_leg = lander.get_leg_positions()
-            pygame.draw.line(self.screen, self.WHITE, *left_leg)
-            pygame.draw.line(self.screen, self.WHITE, *right_leg)
+            pygame.draw.line(self.screen, color, *left_leg)
+            pygame.draw.line(self.screen, color, *right_leg)
         
+        # Update display with vsync if possible
         pygame.display.flip()
+        return True
         
     def close(self):
         pygame.quit()
