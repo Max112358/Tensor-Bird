@@ -91,31 +91,27 @@ class MultiLanderEnv:
                 reward += LANDING_REWARD  # Significant positive reward for landing
                 terminate = True
                 lander.terminate('landed')
-            elif self.terrain.check_collision(lander.x, lander.y, lander):
+            if self.terrain.check_collision(lander.x, lander.y, lander):
                 reward += CRASH_PENALTY  # Significant negative reward for crashing
                 terminate = True
                 lander.terminate('crashed')
-            elif (lander.x < 0 or lander.x > self.width or lander.y < 0):
+            if (lander.x < 0 or lander.x > self.width or lander.y < 0):
                 reward += OUT_OF_BOUNDS_PENALTY  # Equal penalty for going out of bounds
                 terminate = True
                 lander.terminate('out_of_bounds')
-            elif (lander.fuel <= 0):
-                reward += OUT_OF_BOUNDS_PENALTY  # Equal penalty for running out of fuel
+            if (lander.fuel <= 0):
+                reward += OUT_OF_FUEL_PENALTY  # Equal penalty for running out of fuel
                 terminate = True
                 lander.terminate('out_of_fuel')
-            elif self.steps >= MAX_STEPS_PER_EPISODE:
-                reward += OUT_OF_BOUNDS_PENALTY  # Penalty for timeout
-                terminate = True
-                lander.terminate('timeout')
-            else:
-                # Shaping rewards with balanced scales
-                reward += (
-                    -10.0 * (distance_to_pad / self.width)     # Distance from pad
-                    - 10.0 * (height_diff / self.height)       # Height difference
-                    - 1.0 * velocity_penalty / 100.0          # Excessive velocity
-                    - 2.0 * angle_penalty                     # Tilting
-                    - 0.1 * (INITIAL_FUEL - lander.fuel) / INITIAL_FUEL  # Fuel efficiency
-                )
+            
+            # Shaping rewards with balanced scales
+            reward += (
+                -10.0 * (distance_to_pad / self.width)     # Distance from pad
+                - 10.0 * (height_diff / self.height)       # Height difference
+                - 1.0 * velocity_penalty / 100.0          # Excessive velocity
+                - 2.0 * angle_penalty                     # Tilting
+                - 0.1 * (INITIAL_FUEL - lander.fuel) / INITIAL_FUEL  # Fuel efficiency
+            )
             
             # Update episode rewards
             self.episode_rewards[i] += reward
