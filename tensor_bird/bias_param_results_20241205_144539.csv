@@ -1,2 +1,0 @@
-bias_init_stdev,bias_range,bias_mutate_power,generations_to_target,max_fitness_achieved,timestamp
-0.1,1.0,0.1,10,100.09999999999859,2024-12-05 14:46:26

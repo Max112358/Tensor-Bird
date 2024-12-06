@@ -1,30 +1,44 @@
-# test_extremes.py
 import pygame
 import neat
 import os
 import sys
+import random
 from constants import *
 from bird import Bird
 from pipe import Pipe 
 from background import Background
 from game_utils import check_collision, draw_game
 from death_marker import DeathMarker
+from inputs import get_pipe_inputs
 
 def create_extreme_pipe(x, is_high):
+    """Create a pipe with gap positioned at extreme top or bottom"""
     pipe = Pipe(x)
     if is_high:
-        # Place gap as high as possible while maintaining minimum margins
         pipe.gap_y = PIPE_TOP_MARGIN
     else:
-        # Place gap as low as possible while maintaining minimum margins
         pipe.gap_y = SCREEN_HEIGHT - PIPE_GAP - PIPE_BOTTOM_MARGIN
     
-    # Recalculate pipe positions based on new gap_y
     pipe.top_y = pipe.gap_y - pipe.DOWN_PIPE_IMG.get_height()
     pipe.bottom_y = pipe.gap_y + PIPE_GAP
     pipe.height = pipe.gap_y
     
-    # Update collision rectangles
+    pipe.top_rect = pygame.Rect(pipe.x, 0, PIPE_WIDTH, pipe.gap_y)
+    pipe.bottom_rect = pygame.Rect(pipe.x, pipe.bottom_y, PIPE_WIDTH, 
+                                 SCREEN_HEIGHT - pipe.bottom_y)
+    return pipe
+
+def create_random_pipe(x):
+    """Create a pipe with randomly positioned gap"""
+    pipe = Pipe(x)
+    min_gap_y = PIPE_TOP_MARGIN
+    max_gap_y = SCREEN_HEIGHT - PIPE_GAP - PIPE_BOTTOM_MARGIN
+    pipe.gap_y = random.randint(min_gap_y, max_gap_y)
+    
+    pipe.top_y = pipe.gap_y - pipe.DOWN_PIPE_IMG.get_height()
+    pipe.bottom_y = pipe.gap_y + PIPE_GAP
+    pipe.height = pipe.gap_y
+    
     pipe.top_rect = pygame.Rect(pipe.x, 0, PIPE_WIDTH, pipe.gap_y)
     pipe.bottom_rect = pygame.Rect(pipe.x, pipe.bottom_y, PIPE_WIDTH, 
                                  SCREEN_HEIGHT - pipe.bottom_y)
@@ -32,7 +46,6 @@ def create_extreme_pipe(x, is_high):
 
 def eval_genomes(genomes, config):
     try:
-        # Initialize lists to track active birds and networks
         birds = []
         nets = []
         ge = []
@@ -40,7 +53,6 @@ def eval_genomes(genomes, config):
         best_genome = None
         best_fitness = -float('inf')
         
-        # Create neural networks for each genome
         for _, genome in genomes:
             net = neat.nn.FeedForwardNetwork.create(genome, config)
             nets.append(net)
@@ -48,13 +60,18 @@ def eval_genomes(genomes, config):
             genome.fitness = 0
             ge.append(genome)
         
-        # Initialize game objects
         background = Background(SCREEN_WIDTH, SCREEN_HEIGHT)
         
-        # Create alternating extreme height pipes
+        # Create pipes with random first pipe and alternating extremes after
         pipes = []
-        for i in range(VISIBLE_PIPES):
-            is_high = i % 2 == 0  # Alternate between high and low
+        # First pipe is random
+        pipes.append(create_random_pipe(FIRST_PIPE_X))
+        # Second pipe is randomly chosen extreme
+        is_high = random.choice([True, False])
+        pipes.append(create_extreme_pipe(FIRST_PIPE_X + PIPE_SPACING, is_high))
+        # Remaining pipes alternate
+        for i in range(2, VISIBLE_PIPES):
+            is_high = not is_high
             x = FIRST_PIPE_X + i * PIPE_SPACING
             pipes.append(create_extreme_pipe(x, is_high))
         
@@ -65,7 +82,6 @@ def eval_genomes(genomes, config):
         while run and len(birds) > 0:
             clock.tick(FPS)
             
-            # Handle quit event
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     current_best = max(ge, key=lambda x: x.fitness)
@@ -74,16 +90,13 @@ def eval_genomes(genomes, config):
                     pygame.quit()
                     sys.exit()
             
-            # Move background for parallax effect
             background.move()
             
-            # Move and clean up death markers
             for marker in death_markers[:]:
                 marker.move()
                 if marker.is_offscreen():
                     death_markers.remove(marker)
             
-            # Determine which pipes to focus on (current and next)
             pipe_ind = 0
             next_pipe_ind = 1
             if len(birds) > 0:
@@ -91,42 +104,12 @@ def eval_genomes(genomes, config):
                     pipe_ind = 1
                     next_pipe_ind = 2
             
-            # Check if any bird has reached fitness threshold
-            threshold_reached = False
-            for genome in ge:
-                if genome.fitness >= config.fitness_threshold:
-                    threshold_reached = True
-                    best_genome = genome
-                    best_fitness = genome.fitness
-                    print(f"\nFitness threshold {config.fitness_threshold} reached!")
-                    print(f"Best fitness achieved: {best_fitness}")
-                    run = False
-                    break
-                    
-            if threshold_reached:
-                break
-            
-            # Update all birds
             for x, bird in enumerate(birds):
                 bird.move()
                 ge[x].fitness += 0.1
                 
-                # Get the next pipe if available
-                next_pipe = pipes[next_pipe_ind] if next_pipe_ind < len(pipes) else pipes[pipe_ind]
-                
-                # Normalized neural network inputs
-                output = nets[x].activate((
-                    bird.y / SCREEN_HEIGHT,  # Normalized height (0 to 1)
-                    bird.velocity / MAX_FALL_SPEED,  # Normalized velocity (-1 to 1)
-                    
-                    # Normalize all distances
-                    abs(bird.y - pipes[pipe_ind].height) / SCREEN_HEIGHT,
-                    abs(bird.y - pipes[pipe_ind].bottom_y) / SCREEN_HEIGHT,
-                    (pipes[pipe_ind].x - bird.x) / SCREEN_WIDTH,
-                    abs(bird.y - next_pipe.height) / SCREEN_HEIGHT,
-                    abs(bird.y - next_pipe.bottom_y) / SCREEN_HEIGHT,
-                    (next_pipe.x - bird.x) / SCREEN_WIDTH
-                ))
+                next_pipe = pipes[next_pipe_ind] if next_pipe_ind < len(pipes) else None
+                output = nets[x].activate(get_pipe_inputs(bird, pipes[pipe_ind], next_pipe))
                 
                 if output[0] > 0.5:
                     bird.jump()
@@ -135,11 +118,9 @@ def eval_genomes(genomes, config):
                     best_fitness = ge[x].fitness
                     best_genome = ge[x]
             
-            # Update and check all pipes
             for pipe in pipes:
                 pipe.move()
                 
-                # Check each bird for collisions
                 x = 0
                 while x < len(birds):
                     collision, death_pos = check_collision(birds[x], pipe)
@@ -153,18 +134,14 @@ def eval_genomes(genomes, config):
                     elif not pipe.passed and birds[x].x > pipe.x + PIPE_WIDTH:
                         pipe.passed = True
                         score += 1
-                        # Extra reward for passing extreme pipes
                         ge[x].fitness += 8
                     x += 1
             
-            # Remove and add new pipes as needed
             while len(pipes) > 0 and pipes[0].x < -PIPE_WIDTH:
                 pipes.pop(0)
-                # Add new pipe with opposite height of the last pipe
-                is_high = not (pipes[-1].gap_y <= PIPE_TOP_MARGIN + 10)  # Check if last pipe was low
+                is_high = not (pipes[-1].gap_y <= PIPE_TOP_MARGIN + 10)
                 pipes.append(create_extreme_pipe(pipes[-1].x + PIPE_SPACING, is_high))
             
-            # Draw the current game state
             draw_game(SCREEN, background, pipes, birds, score, death_markers)
         
         return best_genome

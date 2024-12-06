@@ -104,7 +104,7 @@ bias_replace_rate       = 0.1
 # Initial number of hidden nodes (grows through evolution)
 num_hidden              = 0
 # Number of input nodes (matches number of input parameters)
-num_inputs             = 3
+num_inputs             = 4
 # Number of output nodes (1 for jump/don't jump)
 num_outputs            = 1
 # If True, network must be acyclic (no recurrent connections)

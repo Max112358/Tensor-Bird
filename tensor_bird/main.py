@@ -8,6 +8,7 @@ from pipe import Pipe
 from background import Background
 from game_utils import check_collision, draw_game
 from death_marker import DeathMarker
+from inputs import get_pipe_inputs
 
 def eval_genomes(genomes, config):
     try:
@@ -49,7 +50,7 @@ def eval_genomes(genomes, config):
                 if marker.is_offscreen():
                     death_markers.remove(marker)
             
-            # Determine which pipes to focus on (current and next)
+            # Determine which pipes to focus on
             pipe_ind = 0
             next_pipe_ind = 1
             if len(birds) > 0:
@@ -80,16 +81,8 @@ def eval_genomes(genomes, config):
                 # Get the next pipe if available
                 next_pipe = pipes[next_pipe_ind] if next_pipe_ind < len(pipes) else pipes[pipe_ind]
                 
-                # Calculate center points
-                current_pipe_center = pipes[pipe_ind].gap_y + (PIPE_GAP / 2)
-                next_pipe_center = next_pipe.gap_y + (PIPE_GAP / 2)
-                
-                # Simplified inputs: just bird Y position and pipe centers
-                output = nets[x].activate((
-                    bird.y / SCREEN_HEIGHT,  # Normalized bird height
-                    current_pipe_center / SCREEN_HEIGHT,  # Normalized current pipe center
-                    next_pipe_center / SCREEN_HEIGHT,  # Normalized next pipe center
-                ))
+                # Get neural network inputs using the inputs module
+                output = nets[x].activate(get_pipe_inputs(bird, pipes[pipe_ind], next_pipe))
                 
                 if output[0] > 0.5:
                     bird.jump()

@@ -12,6 +12,7 @@ from pipe import Pipe
 from background import Background
 from game_utils import check_collision, draw_game
 from death_marker import DeathMarker
+from inputs import get_pipe_inputs
 
 class HyperparameterTest:
     def __init__(self):
@@ -58,6 +59,9 @@ class HyperparameterTest:
             config_path
         )
         
+        # Update num_inputs to match new input system
+        config.genome_config.num_inputs = 4  # Updated to match inputs.py
+        
         # Set the min/max values symmetrically based on the range parameter
         config.genome_config.bias_init_stdev = params['bias_init_stdev']
         config.genome_config.bias_max_value = params['bias_range']
@@ -65,8 +69,6 @@ class HyperparameterTest:
         config.genome_config.bias_mutate_power = params['bias_mutate_power']
         
         pop = neat.Population(config)
-        
-        # Create the initial species
         pop.species.speciate(config, pop.population, 0)
         
         best_fitness = 0
@@ -88,25 +90,6 @@ class HyperparameterTest:
                 pop.species.speciate(config, pop.population, generation + 1)
         
         return self.max_generations, best_fitness
-
-    def print_best_performance(self):
-        print("\n=== BEST PERFORMANCE SO FAR ===")
-        print(f"Generations: {self.best_performance['generations']}")
-        print(f"Max Fitness: {self.best_performance['fitness']:.2f}")
-        print("Parameters:")
-        for param, value in self.best_performance['params'].items():
-            print(f"  {param}: {value:.3f}")
-        print("============================\n")
-
-    def update_best_performance(self, generations, fitness, params):
-        if generations < self.best_performance['generations'] or \
-           (generations == self.best_performance['generations'] and 
-            fitness > self.best_performance['fitness']):
-            self.best_performance['generations'] = generations
-            self.best_performance['fitness'] = fitness
-            self.best_performance['params'] = params.copy()
-            return True
-        return False
 
     def eval_genomes(self, genomes, config):
         birds = []
@@ -142,6 +125,7 @@ class HyperparameterTest:
                 if marker.is_offscreen():
                     death_markers.remove(marker)
             
+            # Determine which pipes to focus on
             pipe_ind = 0
             next_pipe_ind = 1
             if len(birds) > 0:
@@ -149,23 +133,14 @@ class HyperparameterTest:
                     pipe_ind = 1
                     next_pipe_ind = 2
             
-            next_pipe = pipes[next_pipe_ind] if next_pipe_ind < len(pipes) else pipes[pipe_ind]
+            next_pipe = pipes[next_pipe_ind] if next_pipe_ind < len(pipes) else None
             
             for x, bird in enumerate(birds):
                 bird.move()
-                # Only fitness measure is survival time
                 ge[x].fitness += 0.1
                 
-                output = nets[x].activate((
-                    bird.y / SCREEN_HEIGHT,
-                    bird.velocity / MAX_FALL_SPEED,
-                    abs(bird.y - pipes[pipe_ind].height) / SCREEN_HEIGHT,
-                    abs(bird.y - pipes[pipe_ind].bottom_y) / SCREEN_HEIGHT,
-                    (pipes[pipe_ind].x - bird.x) / SCREEN_WIDTH,
-                    abs(bird.y - next_pipe.height) / SCREEN_HEIGHT,
-                    abs(bird.y - next_pipe.bottom_y) / SCREEN_HEIGHT,
-                    (next_pipe.x - bird.x) / SCREEN_WIDTH
-                ))
+                # Use the new input system
+                output = nets[x].activate(get_pipe_inputs(bird, pipes[pipe_ind], next_pipe))
                 
                 if output[0] > 0.5:
                     bird.jump()
@@ -184,7 +159,6 @@ class HyperparameterTest:
                     if collision:
                         if death_pos:
                             death_markers.append(DeathMarker(*death_pos))
-                        # Remove bird when it dies (no penalty)
                         birds.pop(x)
                         nets.pop(x)
                         ge.pop(x)
@@ -200,6 +174,25 @@ class HyperparameterTest:
             draw_game(SCREEN, background, pipes, birds, score, death_markers)
             
         return max_fitness, False
+
+    def print_best_performance(self):
+        print("\n=== BEST PERFORMANCE SO FAR ===")
+        print(f"Generations: {self.best_performance['generations']}")
+        print(f"Max Fitness: {self.best_performance['fitness']:.2f}")
+        print("Parameters:")
+        for param, value in self.best_performance['params'].items():
+            print(f"  {param}: {value:.3f}")
+        print("============================\n")
+
+    def update_best_performance(self, generations, fitness, params):
+        if generations < self.best_performance['generations'] or \
+           (generations == self.best_performance['generations'] and 
+            fitness > self.best_performance['fitness']):
+            self.best_performance['generations'] = generations
+            self.best_performance['fitness'] = fitness
+            self.best_performance['params'] = params.copy()
+            return True
+        return False
 
     def run_tests(self):
         try:
@@ -238,7 +231,7 @@ class HyperparameterTest:
             self.print_best_performance()
         except Exception as e:
             print(f"\nError during testing: {str(e)}")
-            raise  # Re-raise the exception to see the full traceback
+            raise
         finally:
             pygame.quit()
 
