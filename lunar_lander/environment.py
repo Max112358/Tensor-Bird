@@ -63,55 +63,54 @@ class MultiLanderEnv:
             state = lander.step(action)
             states.append(state)
             
-            # For inactive landers, maintain their final state
-            if not lander.active:
-                rewards.append(0)  # Keep this as 0 since we don't want to double-count penalties
-                dones.append(True)
-                info['landers'].append({
-                    'active': False,
-                    'reason': lander.terminate_reason,
-                    'episode_reward': self.episode_rewards[i]  # This will contain the total accumulated reward
-                })
-                continue
-            
-            any_active = True  # We found an active lander
-            
-            # Calculate reward components with balanced scales
+            # Calculate shaping rewards for all landers, regardless of active status
             distance_to_pad = abs(lander.x - self.terrain.landing_pad_x)
             height_diff = abs(lander.y - self.terrain.ground_height)
             velocity_penalty = abs(lander.velocity_x) + abs(lander.velocity_y)
             angle_penalty = abs(lander.angle)
             
-            # Check termination conditions
+            # Base reward from shaping
+            reward = (
+                -10.0 * (distance_to_pad / self.width)     
+                - 10.0 * (height_diff / self.height)       
+                - 1.0 * velocity_penalty / 100.0          
+                - 2.0 * angle_penalty                     
+                - 0.1 * (INITIAL_FUEL - lander.fuel) / INITIAL_FUEL
+            )
+
+            # For inactive landers, just return the shaping reward
+            if not lander.active:
+                rewards.append(reward)
+                dones.append(True)
+                info['landers'].append({
+                    'active': False,
+                    'reason': lander.terminate_reason,
+                    'episode_reward': self.episode_rewards[i]
+                })
+                continue
+                
+            any_active = True  # We found an active lander
+            
+            # Check termination conditions for active landers
             terminate = False
-            reward = 0
             
             # Terminal rewards
             if self.terrain.check_landing(lander.x, lander.y, lander.velocity_y, lander):
                 reward += LANDING_REWARD  # Significant positive reward for landing
                 terminate = True
                 lander.terminate('landed')
-            if self.terrain.check_collision(lander.x, lander.y, lander):
+            elif self.terrain.check_collision(lander.x, lander.y, lander):
                 reward += CRASH_PENALTY  # Significant negative reward for crashing
                 terminate = True
                 lander.terminate('crashed')
-            if (lander.x < 0 or lander.x > self.width or lander.y < 0):
+            elif (lander.x < 0 or lander.x > self.width or lander.y < 0):
                 reward += OUT_OF_BOUNDS_PENALTY  # Equal penalty for going out of bounds
                 terminate = True
                 lander.terminate('out_of_bounds')
-            if (lander.fuel <= 0):
-                reward += OUT_OF_FUEL_PENALTY  # Equal penalty for running out of fuel
+            elif (lander.fuel <= 0):
+                reward += CRASH_PENALTY  # Equal penalty for running out of fuel
                 terminate = True
                 lander.terminate('out_of_fuel')
-            
-            # Shaping rewards with balanced scales
-            reward += (
-                -10.0 * (distance_to_pad / self.width)     # Distance from pad
-                - 10.0 * (height_diff / self.height)       # Height difference
-                - 1.0 * velocity_penalty / 100.0          # Excessive velocity
-                - 2.0 * angle_penalty                     # Tilting
-                - 0.1 * (INITIAL_FUEL - lander.fuel) / INITIAL_FUEL  # Fuel efficiency
-            )
             
             # Update episode rewards
             self.episode_rewards[i] += reward

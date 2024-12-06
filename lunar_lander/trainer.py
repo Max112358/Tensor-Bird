@@ -89,9 +89,8 @@ class LanderTrainer:
             time.sleep(1/60)  # Cap at 60 FPS
             
             # Check if episode should end
-            if step > MIN_STEPS_BEFORE_DONE:
-                if info['all_done'] or not self.env.is_running():
-                    break
+            if info['all_done'] or not self.env.is_running():
+                break
         
         # Update generation statistics
         fitnesses = [genome.fitness for genome, _ in nets]

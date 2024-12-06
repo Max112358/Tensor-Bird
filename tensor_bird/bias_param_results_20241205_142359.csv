@@ -1,0 +1,2 @@
+bias_init_mean,bias_init_stdev,bias_max_value,bias_min_value,bias_mutate_power,bias_mutate_rate,bias_replace_rate,generations_to_target,max_fitness_achieved,timestamp
+-0.5,0.1,1.0,-5.0,0.1,0.1,0.1,15,95.69999999999884,2024-12-05 14:25:00
