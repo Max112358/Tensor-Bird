@@ -6,7 +6,7 @@ from renderer import Renderer
 from constants import *
 
 class MultiLanderEnv:
-    def __init__(self, num_landers: int = 20):
+    def __init__(self, num_landers: int = 20, fast_mode: bool = False):
         # Screen dimensions 
         self.width = 800
         self.height = 600
@@ -17,7 +17,11 @@ class MultiLanderEnv:
         
         # Initialize terrain and renderer
         self.terrain = None  # Will be created in reset()
-        self.renderer = Renderer(self.width, self.height)
+        self.fast_mode = fast_mode
+        if not fast_mode:
+            self.renderer = Renderer(self.width, self.height)
+        else:
+            self.renderer = None
         
         # Track episode progress and state
         self.episode_rewards = None
@@ -125,12 +129,13 @@ class MultiLanderEnv:
         # Episode is only done when NO landers are active
         all_done = not any_active
         
-        # Update renderer and check if window should close
-        if not self.renderer.render(self.landers, self.terrain):
-            self.running = False
-            info['quit'] = True
-            return states, rewards, [True] * len(self.landers), info
-            
+        # Update renderer if not in fast mode
+        if not self.fast_mode:
+            if not self.renderer.render(self.landers, self.terrain):
+                self.running = False
+                info['quit'] = True
+                return states, rewards, [True] * len(self.landers), info
+        
         info['quit'] = False
         info['all_done'] = all_done
         info['steps'] = self.steps
@@ -139,6 +144,9 @@ class MultiLanderEnv:
     
     def render(self):
         """Render the current state"""
+        if self.fast_mode:
+            return True
+            
         if not self.renderer.render(self.landers, self.terrain):
             self.running = False
             return False
@@ -146,7 +154,8 @@ class MultiLanderEnv:
     
     def close(self):
         """Clean up resources"""
-        self.renderer.close()
+        if not self.fast_mode and self.renderer:
+            self.renderer.close()
         
     def is_running(self) -> bool:
         """Check if environment is still running"""

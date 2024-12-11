@@ -9,19 +9,21 @@ import matplotlib.pyplot as plt
 from constants import MAX_STEPS_PER_EPISODE, MIN_STEPS_BEFORE_DONE
 
 class LanderTrainer:
-    def __init__(self, num_landers: int = 20, checkpoint_interval: int = 5):
+    def __init__(self, num_landers: int = 20, checkpoint_interval: int = 5, fast_mode: bool = False):
         """
         Initialize the trainer
         
         Args:
             num_landers: Number of landers to train simultaneously
             checkpoint_interval: How often to save checkpoints (in generations)
+            fast_mode: Whether to run in fast mode without rendering
         """
-        self.env = MultiLanderEnv(num_landers=num_landers)
+        self.env = MultiLanderEnv(num_landers=num_landers, fast_mode=fast_mode)
         self.generation = 0
         self.checkpoint_interval = checkpoint_interval
         self.best_fitness = float('-inf')
         self.generation_stats = []
+        self.fast_mode = fast_mode
         
         # Create checkpoint directory if it doesn't exist
         os.makedirs('checkpoints', exist_ok=True)
@@ -70,7 +72,8 @@ class LanderTrainer:
             if info.get('quit', False):
                 print("\nWindow closed, ending training")
                 running = False
-                break
+                self.env.close()
+                raise KeyboardInterrupt
             
             # Update fitness scores
             for i, ((genome, _), reward, lander_info) in enumerate(zip(nets, rewards, info['landers'])):
@@ -85,8 +88,9 @@ class LanderTrainer:
                 if lander_info.get('reason') == 'landed':
                     generation_stats['successful_landings'] += 1
             
-            # Control frame rate
-            time.sleep(1/60)  # Cap at 60 FPS
+            # Control frame rate if not in fast mode
+            if not self.fast_mode:
+                time.sleep(1/60)  # Cap at 60 FPS
             
             # Check if episode should end
             if info['all_done'] or not self.env.is_running():
