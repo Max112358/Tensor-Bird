@@ -36,13 +36,17 @@ class LanderTrainer:
             genomes: List of (genome_id, genome) tuples
             config: NEAT configuration
         """
-        # Keep track of active networks and their genomes
+        # Create networks for each genome
         nets = []
+        current_genomes = []
         for genome_id, genome in genomes:
-            genome.fitness = -100.0  # Start with penalty
             net = neat.nn.FeedForwardNetwork.create(genome, config)
-            nets.append((genome, net))
-            
+            nets.append(net)
+            current_genomes.append(genome)
+                
+        # Make sure environment has correct number of landers
+        self.env = MultiLanderEnv(num_landers=len(current_genomes), fast_mode=self.fast_mode)
+        
         # Initialize environment
         states = self.env.reset()
         
@@ -59,7 +63,7 @@ class LanderTrainer:
         while running and step < MAX_STEPS_PER_EPISODE:
             # Get actions from networks
             actions = []
-            for i, (state, (genome, net)) in enumerate(zip(states, nets)):
+            for i, (state, net) in enumerate(zip(states, nets)):
                 output = net.activate(state)
                 action = np.argmax(output)
                 actions.append(action)
@@ -75,31 +79,37 @@ class LanderTrainer:
                 self.env.close()
                 raise KeyboardInterrupt
             
-            # Update fitness scores
-            for i, ((genome, _), reward, lander_info) in enumerate(zip(nets, rewards, info['landers'])):
-                genome.fitness += reward  # Always update fitness, not just for non-zero rewards
-                
-                # Track best fitness
-                if genome.fitness > self.best_fitness:
-                    self.best_fitness = genome.fitness
-                    self._save_best_genome(genome)
-                
-                # Count successful landings
+            # Update reward tracking
+            for lander_info in info['landers']:
                 if lander_info.get('reason') == 'landed':
                     generation_stats['successful_landings'] += 1
-            
+                    
             # Control frame rate if not in fast mode
             if not self.fast_mode:
                 time.sleep(1/60)  # Cap at 60 FPS
-            
+                
             # Check if episode should end
             if info['all_done'] or not self.env.is_running():
                 break
         
-        # Update generation statistics
-        fitnesses = [genome.fitness for genome, _ in nets]
-        generation_stats['max_fitness'] = max(fitnesses)
-        generation_stats['avg_fitness'] = sum(fitnesses) / len(fitnesses)
+        # Get final episode rewards and update genome fitness values
+        final_rewards = self.env.get_episode_rewards()
+        
+        # Safety check to ensure we have the right number of rewards
+        if len(final_rewards) != len(current_genomes):
+            print(f"Warning: Mismatch between number of rewards ({len(final_rewards)}) and genomes ({len(current_genomes)})")
+            # Use the minimum length to avoid index errors
+            min_len = min(len(final_rewards), len(current_genomes))
+            final_rewards = final_rewards[:min_len]
+            current_genomes = current_genomes[:min_len]
+        
+        # Update fitness values
+        for genome, reward in zip(current_genomes, final_rewards):
+            genome.fitness = reward
+            generation_stats['max_fitness'] = max(generation_stats['max_fitness'], reward)
+        
+        # Calculate average fitness
+        generation_stats['avg_fitness'] = sum(final_rewards) / len(final_rewards)
         self.generation_stats.append(generation_stats)
         
         # Print generation summary

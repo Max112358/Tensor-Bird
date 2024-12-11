@@ -13,6 +13,9 @@ class Renderer:
         self.screen = pygame.display.set_mode((width, height), flags)
         pygame.display.set_caption("Multi Lunar Lander")
         
+        # Initialize font for lander numbers
+        self.number_font = pygame.font.Font(None, 36)  # Added font for numbers
+        
         # Configure window for background rendering while maintaining taskbar visibility
         info = pygame.display.get_wm_info()
         if 'window' in info:  # Check if we can get the window handle
@@ -71,8 +74,8 @@ class Renderer:
             4
         )
         
-        # Draw landers with appropriate colors
-        for lander in landers:
+        # Draw landers with appropriate colors and number labels
+        for i, lander in enumerate(landers):
             color = lander.get_color()
             
             # Draw main body
@@ -82,6 +85,12 @@ class Renderer:
             left_leg, right_leg = lander.get_leg_positions()
             pygame.draw.line(self.screen, color, *left_leg)
             pygame.draw.line(self.screen, color, *right_leg)
+            
+            # Draw lander number
+            number_text = self.number_font.render(str(i + 1), True, self.BLACK)
+            number_rect = number_text.get_rect()
+            number_rect.center = (int(lander.x), int(lander.y))
+            self.screen.blit(number_text, number_rect)
         
         # Update display with vsync if possible
         pygame.display.flip()
