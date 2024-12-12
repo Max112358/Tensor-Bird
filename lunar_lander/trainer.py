@@ -69,46 +69,70 @@ class LanderTrainer:
                     if network is None:
                         actions.append(0)  # No-op for padding networks
                     else:
-                        output = network.activate(state)
-                        action = 0 if output[0] < 0.5 else 1
-                        actions.append(action)
+                        try:
+                            # Get raw outputs from network
+                            output = network.activate(state)
+                            
+                            # Default to no thrust
+                            action = 0
+                            
+                            # Check thrusters in priority order (main > side thrusters)
+                            if len(output) >= 3:  # Ensure we have all three outputs
+                                if output[1] > 0.5:  # Main thruster has priority
+                                    action = 2
+                                elif output[0] > 0.5:  # Left thruster
+                                    action = 1
+                                elif output[2] > 0.5:  # Right thruster
+                                    action = 3
+                            
+                            actions.append(action)
+                        except Exception as e:
+                            print(f"Error activating network: {e}")
+                            actions.append(0)  # Fallback to no thrust
                 
-                # Step environment
-                states, rewards, dones, info = self.env.step(actions)
-                step += 1
-                
-                completed = self.env.get_completed_landers()
-                active_count = self.env.get_active_landers()
-                
-                print(f"\rBatch {i//self.env.num_landers + 1} Step {step}: Active: {active_count}/{total_landers} | " + 
-                    f"Landed: {completed.get('landed', 0)} | " +
-                    f"Crashed: {completed.get('crashed', 0)} | " +
-                    f"Out of Bounds: {completed.get('out_of_bounds', 0)} | " +
-                    f"Out of Fuel: {completed.get('out_of_fuel', 0)}", end='')
-                
-                if info.get('quit', False):
-                    print("\nWindow closed, ending training")
-                    self.env.close()
-                    raise KeyboardInterrupt
-                
-                # Update genome fitness for active networks
-                for genome, reward in zip(batch_genomes, rewards):
-                    if genome is not None:
-                        genome.fitness += reward
-                
-                # Count successful landings
-                if completed.get('landed', 0) > episode_landings:
-                    episode_landings = completed.get('landed', 0)
-                
-                if all(dones) or not self.env.is_running():
+                try:
+                    # Step environment
+                    states, rewards, dones, info = self.env.step(actions)
+                    step += 1
+                    
+                    completed = self.env.get_completed_landers()
+                    active_count = self.env.get_active_landers()
+                    
+                    # Print progress
+                    print(f"\rBatch {i//self.env.num_landers + 1} Step {step}: Active: {active_count}/{total_landers} | " + 
+                        f"Landed: {completed.get('landed', 0)} | " +
+                        f"Crashed: {completed.get('crashed', 0)} | " +
+                        f"Out of Bounds: {completed.get('out_of_bounds', 0)} | " +
+                        f"Out of Fuel: {completed.get('out_of_fuel', 0)}", end='')
+                    
+                    if info.get('quit', False):
+                        print("\nWindow closed, ending training")
+                        self.env.close()
+                        raise KeyboardInterrupt
+                    
+                    # Update genome fitness for active networks
+                    for genome, reward in zip(batch_genomes, rewards):
+                        if genome is not None:
+                            genome.fitness += reward
+                    
+                    # Track successful landings
+                    if completed.get('landed', 0) > episode_landings:
+                        episode_landings = completed.get('landed', 0)
+                        gen_stats['successful_landings'] += episode_landings
+                    
+                    if all(dones) or not self.env.is_running():
+                        done = True
+                    
+                    if not self.fast_mode:
+                        time.sleep(1/60)
+                        
+                except Exception as e:
+                    print(f"\nError during environment step: {e}")
                     done = True
                 
-                if not self.fast_mode:
-                    time.sleep(1/60)
-            
             print()  # New line after step updates
         
-        print("Generation max fitness calculation:")
+        print("\nGeneration max fitness calculation:")
         
         # Update generation statistics
         for genome in genome_list:

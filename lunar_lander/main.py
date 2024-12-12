@@ -1,11 +1,18 @@
 import os
 import argparse
-from trainer import LanderTrainer
+import game_init
 
 def main():
+    # Initialize game constants first
+    constants = game_init.init()
+    
+    # Now we can safely import the trainer
+    from trainer import LanderTrainer
+    
     # Add command line argument parsing
     parser = argparse.ArgumentParser(description='Train lunar lander AI')
     parser.add_argument('--fast', action='store_true', help='Run in fast mode without rendering')
+    parser.add_argument('--checkpoint', type=str, help='Path to checkpoint file to load')
     args = parser.parse_args()
 
     # Get configuration file path
@@ -16,8 +23,13 @@ def main():
     trainer = LanderTrainer(num_landers=20, fast_mode=args.fast)
     
     try:
+        # Load checkpoint if specified
+        if args.checkpoint:
+            print(f"Loading checkpoint: {args.checkpoint}")
+            trainer.load_checkpoint(args.checkpoint)
+            
         # Run training for 50 generations
-        winner, stats = trainer.run(config_path, n_generations=20000)
+        winner, stats = trainer.run(config_path, n_generations=2000)
         
         if winner:
             print(f"\nBest genome:\n{winner}")

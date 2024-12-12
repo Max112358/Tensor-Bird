@@ -4,34 +4,37 @@ import math
 from lander import Lander
 from terrain import Terrain
 from renderer import Renderer
-from constants import *
+import game_init
 
 class HumanLunarLander:
     def __init__(self):
+        # Initialize game constants first
+        self.const = game_init.init()
+        
         # Initialize game components
         pygame.init()
-        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+        self.screen = pygame.display.set_mode((self.const.SCREEN_WIDTH, self.const.SCREEN_HEIGHT))
         pygame.display.set_caption("Lunar Lander - WASD Controls")
         
-        self.terrain = Terrain(SCREEN_WIDTH, SCREEN_HEIGHT)
+        self.terrain = Terrain(self.const.SCREEN_WIDTH, self.const.SCREEN_HEIGHT)
         self.lander = None
         self.clock = pygame.time.Clock()
         self.score = 0
         self.game_over = False
         
         # Initialize fonts at different sizes
-        self.score_font = pygame.font.Font(None, int(SCREEN_HEIGHT * 0.091))
-        self.info_font = pygame.font.Font(None, int(SCREEN_HEIGHT * 0.05))
-        self.debug_font = pygame.font.Font(None, int(SCREEN_HEIGHT * 0.033))
-        self.game_over_font = pygame.font.Font(None, int(SCREEN_HEIGHT * 0.067))
+        self.score_font = pygame.font.Font(None, int(self.const.SCREEN_HEIGHT * 0.091))
+        self.info_font = pygame.font.Font(None, int(self.const.SCREEN_HEIGHT * 0.05))
+        self.debug_font = pygame.font.Font(None, int(self.const.SCREEN_HEIGHT * 0.033))
+        self.game_over_font = pygame.font.Font(None, int(self.const.SCREEN_HEIGHT * 0.067))
         
         # Pre-render game over text and controls help
         self.game_over_text = self.game_over_font.render('Game Over! Press R to restart', True, (255, 255, 255))
-        self.game_over_rect = self.game_over_text.get_rect(center=(SCREEN_WIDTH/2, SCREEN_HEIGHT/2))
+        self.game_over_rect = self.game_over_text.get_rect(center=(self.const.SCREEN_WIDTH/2, self.const.SCREEN_HEIGHT/2))
         
         # Add control instructions
         self.controls_text = self.info_font.render('Controls: W-Main Engine, A-Left Thruster, D-Right Thruster', True, (255, 255, 255))
-        self.controls_rect = self.controls_text.get_rect(bottomleft=(10, SCREEN_HEIGHT - 10))
+        self.controls_rect = self.controls_text.get_rect(bottomleft=(10, self.const.SCREEN_HEIGHT - 10))
         
         # Colors
         self.WHITE = (255, 255, 255)
@@ -43,7 +46,6 @@ class HumanLunarLander:
         
         # Initialize game state
         self.reset()
-        
         
     def handle_input(self):
         """
@@ -122,7 +124,7 @@ class HumanLunarLander:
         # Draw UI elements
         # Score
         score_text = self.score_font.render(str(int(self.score)), True, self.WHITE)
-        score_rect = score_text.get_rect(center=(SCREEN_WIDTH/2, SCREEN_HEIGHT * 0.091))
+        score_rect = score_text.get_rect(center=(self.const.SCREEN_WIDTH/2, self.const.SCREEN_HEIGHT * 0.091))
         self.screen.blit(score_text, score_rect)
         
         # Training metrics (left side)
@@ -142,8 +144,8 @@ class HumanLunarLander:
         
         # Add safety thresholds
         safety_metrics = [
-            f"Safe vel: <{SAFE_LANDING_VELOCITY:.1f}",
-            f"Safe angle: <{SAFE_LANDING_ANGLE:.1f}°",
+            f"Safe vel: <{self.const.SAFE_LANDING_VELOCITY:.1f}",
+            f"Safe angle: <{self.const.SAFE_LANDING_ANGLE:.1f}°",
         ]
         
         # Render metrics
@@ -156,7 +158,7 @@ class HumanLunarLander:
         for i, metric in enumerate(safety_metrics):
             color = self.WHITE
             text = self.debug_font.render(metric, True, color)
-            self.screen.blit(text, (SCREEN_WIDTH - 150, y_offset + i * line_height))
+            self.screen.blit(text, (self.const.SCREEN_WIDTH - 150, y_offset + i * line_height))
         
         # Controls at bottom
         self.screen.blit(self.controls_text, self.controls_rect)
@@ -169,7 +171,7 @@ class HumanLunarLander:
                 result_text = self.info_font.render(
                     f'Failed: {self.lander.terminate_reason}', True, self.RED
                 )
-            result_rect = result_text.get_rect(center=(SCREEN_WIDTH/2, self.game_over_rect.top - 40))
+            result_rect = result_text.get_rect(center=(self.const.SCREEN_WIDTH/2, self.game_over_rect.top - 40))
             
             self.screen.blit(result_text, result_rect)
             self.screen.blit(self.game_over_text, self.game_over_rect)
@@ -202,7 +204,7 @@ class HumanLunarLander:
                     self.lander.terminate('landed')
                 
                 # Then check for out of bounds
-                elif self.lander.x < 0 or self.lander.x > SCREEN_WIDTH or self.lander.y < 0:
+                elif self.lander.x < 0 or self.lander.x > self.const.SCREEN_WIDTH or self.lander.y < 0:
                     self.score -= 50
                     self.game_over = True
                     self.lander.terminate('out_of_bounds')
@@ -227,7 +229,7 @@ class HumanLunarLander:
             self.render()
             
             # Control frame rate
-            self.clock.tick(FPS)
+            self.clock.tick(self.const.FPS)
             
     def close(self):
         """Clean up resources"""
@@ -236,11 +238,11 @@ class HumanLunarLander:
     def reset(self):
         """Reset the game state with new terrain"""
         # Generate new terrain
-        self.terrain = Terrain(SCREEN_WIDTH, SCREEN_HEIGHT)
+        self.terrain = Terrain(self.const.SCREEN_WIDTH, self.const.SCREEN_HEIGHT)
         
         # Create new lander
-        start_x = SCREEN_WIDTH * 0.5
-        start_y = SCREEN_HEIGHT * 0.1
+        start_x = self.const.SCREEN_WIDTH * 0.5
+        start_y = self.const.SCREEN_HEIGHT * 0.1
         self.lander = Lander(start_x, start_y, self.terrain)
         
         # Reset game state
