@@ -26,16 +26,25 @@ class MultiLanderEnv:
         self.reset()
     
     def step(self, actions: List[int]) -> Tuple[List[np.ndarray], List[float], List[bool], Dict]:
-        """Take environment step for all landers"""
+        """Take environment step for all landers
+        
+        Args:
+            actions: List of actions, one per lander
+            
+        Returns:
+            Tuple of (states, rewards, dones, info) where:
+            - states: List of observation arrays for each lander
+            - rewards: List of reward values for each lander
+            - dones: List of done flags for each lander 
+            - info: Dict containing additional information
+        """
         self.steps += 1
         states = []
         rewards = []
         dones = []
         info = {'landers': []}
         
-        any_active = False
-        
-        # Process each active lander
+        # Process each lander
         for i, (lander, action) in enumerate(zip(self.landers, actions)):
             state = lander.step(action)
             states.append(state)
@@ -48,7 +57,7 @@ class MultiLanderEnv:
             
             # Track reward components
             reward_components = {
-                'distance_reward': -10.0 * (distance_to_pad / self.width),
+                'distance_reward': -50.0 * (distance_to_pad / self.width),
                 'height_reward': -10.0 * (height_diff / self.height),
                 'velocity_penalty': -1.0 * velocity_penalty / 100.0,
                 'angle_penalty': -2.0 * angle_penalty,
@@ -58,8 +67,8 @@ class MultiLanderEnv:
             
             # Calculate base reward from shaping
             reward = sum(reward_components.values())
-
-            # For inactive landers, just return the shaping reward
+            
+            # For inactive landers, just return the current state
             if not lander.active:
                 rewards.append(reward)
                 dones.append(True)
@@ -69,14 +78,26 @@ class MultiLanderEnv:
                     'episode_reward': self.episode_rewards[i]
                 })
                 continue
-                
-            any_active = True
             
-            # Check termination conditions
+            # Check safety violations first
             terminate = False
             
-            # Terminal rewards
-            if self.terrain.check_landing(lander.x, lander.y, lander.velocity_y, lander):
+            # Check for unsafe angle
+            if abs(math.degrees(lander.angle)) > SAFE_LANDING_ANGLE:
+                reward_components['terminal_reward'] = SAFETY_VIOLATION_PENALTY
+                reward += SAFETY_VIOLATION_PENALTY
+                terminate = True
+                lander.terminate('unsafe_angle')
+            
+            # Check for unsafe velocity
+            elif abs(lander.velocity_y) > SAFE_LANDING_VELOCITY:
+                reward_components['terminal_reward'] = SAFETY_VIOLATION_PENALTY
+                reward += SAFETY_VIOLATION_PENALTY
+                terminate = True
+                lander.terminate('unsafe_velocity')
+            
+            # If no safety violations, check other termination conditions
+            elif self.terrain.check_landing(lander.x, lander.y, lander.velocity_y, lander):
                 reward_components['terminal_reward'] = LANDING_REWARD
                 reward += LANDING_REWARD
                 terminate = True
@@ -97,47 +118,34 @@ class MultiLanderEnv:
                 terminate = True
                 lander.terminate('out_of_fuel')
             
-            '''
-            # Print reward breakdown on termination
-            if terminate:
-                print(f"\nLander {i+1} terminated - {lander.terminate_reason}")
-                print("Reward breakdown:")
-                print(f"  Distance to pad: {reward_components['distance_reward']:.2f}")
-                print(f"  Height difference: {reward_components['height_reward']:.2f}")
-                print(f"  Velocity penalty: {reward_components['velocity_penalty']:.2f}")
-                print(f"  Angle penalty: {reward_components['angle_penalty']:.2f}")
-                print(f"  Fuel usage penalty: {reward_components['fuel_penalty']:.2f}")
-                print(f"  Terminal reward: {reward_components['terminal_reward']:.2f}")
-                print(f"  Total reward this step: {reward:.2f}")
-                print(f"  Final cumulative reward: {self.episode_rewards[i] + reward:.2f}")
-                print(f"  Final state:")
-                print(f"    Position: ({lander.x:.1f}, {lander.y:.1f})")
-                print(f"    Velocity: ({lander.velocity_x:.1f}, {lander.velocity_y:.1f})")
-                print(f"    Angle: {math.degrees(lander.angle):.1f}°")
-                print(f"    Remaining fuel: {lander.fuel:.1f}")
-            '''
-            
+            # Update episode rewards and info
             self.episode_rewards[i] += reward
             rewards.append(reward)
             dones.append(terminate)
             info['landers'].append({
                 'active': lander.active,
                 'reason': lander.terminate_reason if terminate else None,
-                'episode_reward': self.episode_rewards[i]
+                'episode_reward': self.episode_rewards[i],
+                'reward_components': reward_components
             })
         
+        # Check if any landers are still active
+        any_active = any(lander.active for lander in self.landers)
         all_done = not any_active
         
+        # Update rendering if not in fast mode
         if not self.fast_mode:
             if not self.renderer.render(self.landers, self.terrain):
                 self.running = False
                 info['quit'] = True
                 return states, rewards, [True] * len(self.landers), info
         
+        # Set final info
         info['quit'] = False
         info['all_done'] = all_done
         info['steps'] = self.steps
         
+        # Return same done state for all landers based on whether any are still active
         return states, rewards, [all_done] * len(self.landers), info
     
     def reset(self) -> List[np.ndarray]:
@@ -152,11 +160,20 @@ class MultiLanderEnv:
         # Reset episode rewards tracking
         self.episode_rewards = [0] * self.num_landers
         
-        # Create new landers with random starting positions along top
+        # Calculate spawn position away from landing pad
+        landing_pad_x = self.terrain.landing_pad_x
+        
+        # If landing pad is in left half, spawn on right side, and vice versa
+        if landing_pad_x < self.width / 2:
+            spawn_x = self.width * 0.8  # Spawn at 80% of screen width
+        else:
+            spawn_x = self.width * 0.2  # Spawn at 20% of screen width
+        
+        spawn_y = self.height * 0.1  # Start near top of screen
+        
+        # Create new landers all at the same position
         for _ in range(self.num_landers):
-            x = np.random.uniform(self.width * 0.2, self.width * 0.8)
-            y = self.height * 0.1  # Start near top of screen
-            self.landers.append(Lander(x, y, self.terrain))
+            self.landers.append(Lander(spawn_x, spawn_y, self.terrain))
             
         # Return initial states
         return [lander.get_state() for lander in self.landers]

@@ -6,7 +6,6 @@ import os
 import pickle
 from typing import Tuple, Optional, Dict, Any
 import matplotlib.pyplot as plt
-from constants import MAX_STEPS_PER_EPISODE, MIN_STEPS_BEFORE_DONE
 
 class LanderTrainer:
     def __init__(self, num_landers: int = 20, checkpoint_interval: int = 5, fast_mode: bool = False):
@@ -29,102 +28,115 @@ class LanderTrainer:
         os.makedirs('checkpoints', exist_ok=True)
         
     def eval_genomes(self, genomes, config) -> None:
-        """
-        Evaluate all genomes in one batch
-        
-        Args:
-            genomes: List of (genome_id, genome) tuples
-            config: NEAT configuration
-        """
-        # Create networks for each genome
-        nets = []
-        current_genomes = []
-        for genome_id, genome in genomes:
-            net = neat.nn.FeedForwardNetwork.create(genome, config)
-            nets.append(net)
-            current_genomes.append(genome)
-                
-        # Make sure environment has correct number of landers
-        self.env = MultiLanderEnv(num_landers=len(current_genomes), fast_mode=self.fast_mode)
-        
-        # Initialize environment
-        states = self.env.reset()
-        
-        # Training loop variables
-        step = 0
-        running = True
-        generation_stats = {
+        """Evaluate each genome"""
+        # Initialize generation statistics
+        gen_stats = {
             'max_fitness': float('-inf'),
             'avg_fitness': 0,
-            'successful_landings': 0
+            'successful_landings': 0,
+            'total_fitness': 0
         }
         
-        # Main training loop
-        while running and step < MAX_STEPS_PER_EPISODE:
-            # Get actions from networks
-            actions = []
-            for i, (state, net) in enumerate(zip(states, nets)):
-                output = net.activate(state)
-                action = np.argmax(output)
-                actions.append(action)
+        # Create neural networks for each genome
+        networks = []
+        genome_list = []
+        for genome_id, genome in genomes:
+            net = neat.nn.FeedForwardNetwork.create(genome, config)
+            networks.append(net)
+            genome_list.append(genome)
+            genome.fitness = 0
+        
+        # Evaluate genomes in batches of num_landers size
+        for i in range(0, len(networks), self.env.num_landers):
+            batch_networks = networks[i:i + self.env.num_landers]
+            batch_genomes = genome_list[i:i + self.env.num_landers]
             
-            # Step environment
-            states, rewards, dones, info = self.env.step(actions)
-            step += 1
+            # Pad with None if we don't have enough genomes to fill the batch
+            while len(batch_networks) < self.env.num_landers:
+                batch_networks.append(None)
+                batch_genomes.append(None)
             
-            # Check if window was closed
-            if info.get('quit', False):
-                print("\nWindow closed, ending training")
-                running = False
-                self.env.close()
-                raise KeyboardInterrupt
+            states = self.env.reset()
+            done = False
+            step = 0
+            total_landers = len(states)
+            episode_landings = 0
             
-            # Update reward tracking
-            for lander_info in info['landers']:
-                if lander_info.get('reason') == 'landed':
-                    generation_stats['successful_landings'] += 1
-                    
-            # Control frame rate if not in fast mode
-            if not self.fast_mode:
-                time.sleep(1/60)  # Cap at 60 FPS
+            while not done:
+                # Get actions for each lander using its own network
+                actions = []
+                for state, network in zip(states, batch_networks):
+                    if network is None:
+                        actions.append(0)  # No-op for padding networks
+                    else:
+                        output = network.activate(state)
+                        action = 0 if output[0] < 0.5 else 1
+                        actions.append(action)
                 
-            # Check if episode should end
-            if info['all_done'] or not self.env.is_running():
-                break
+                # Step environment
+                states, rewards, dones, info = self.env.step(actions)
+                step += 1
+                
+                completed = self.env.get_completed_landers()
+                active_count = self.env.get_active_landers()
+                
+                print(f"\rBatch {i//self.env.num_landers + 1} Step {step}: Active: {active_count}/{total_landers} | " + 
+                    f"Landed: {completed.get('landed', 0)} | " +
+                    f"Crashed: {completed.get('crashed', 0)} | " +
+                    f"Out of Bounds: {completed.get('out_of_bounds', 0)} | " +
+                    f"Out of Fuel: {completed.get('out_of_fuel', 0)}", end='')
+                
+                if info.get('quit', False):
+                    print("\nWindow closed, ending training")
+                    self.env.close()
+                    raise KeyboardInterrupt
+                
+                # Update genome fitness for active networks
+                for genome, reward in zip(batch_genomes, rewards):
+                    if genome is not None:
+                        genome.fitness += reward
+                
+                # Count successful landings
+                if completed.get('landed', 0) > episode_landings:
+                    episode_landings = completed.get('landed', 0)
+                
+                if all(dones) or not self.env.is_running():
+                    done = True
+                
+                if not self.fast_mode:
+                    time.sleep(1/60)
+            
+            print()  # New line after step updates
         
-        # Get final episode rewards and update genome fitness values
-        final_rewards = self.env.get_episode_rewards()
+        print("Generation max fitness calculation:")
         
-        # Safety check to ensure we have the right number of rewards
-        if len(final_rewards) != len(current_genomes):
-            print(f"Warning: Mismatch between number of rewards ({len(final_rewards)}) and genomes ({len(current_genomes)})")
-            # Use the minimum length to avoid index errors
-            min_len = min(len(final_rewards), len(current_genomes))
-            final_rewards = final_rewards[:min_len]
-            current_genomes = current_genomes[:min_len]
+        # Update generation statistics
+        for genome in genome_list:
+            if genome is not None:
+                gen_stats['max_fitness'] = max(gen_stats['max_fitness'], genome.fitness)
+                gen_stats['total_fitness'] += genome.fitness
         
-        # Update fitness values
-        for genome, reward in zip(current_genomes, final_rewards):
-            genome.fitness = reward
-            generation_stats['max_fitness'] = max(generation_stats['max_fitness'], reward)
+        # Calculate generation averages
+        gen_stats['avg_fitness'] = gen_stats['total_fitness'] / len(genome_list)
         
-        # Calculate average fitness
-        generation_stats['avg_fitness'] = sum(final_rewards) / len(final_rewards)
-        self.generation_stats.append(generation_stats)
+        # Store generation statistics
+        self.generation_stats.append(gen_stats)
+        
+        # Update best fitness
+        if gen_stats['max_fitness'] > self.best_fitness:
+            self.best_fitness = gen_stats['max_fitness']
         
         # Print generation summary
         print(f"\nGeneration {self.generation} completed:")
-        print(f"Steps: {step}")
-        print(f"Max Fitness: {generation_stats['max_fitness']:.2f}")
-        print(f"Avg Fitness: {generation_stats['avg_fitness']:.2f}")
-        print(f"Successful Landings: {generation_stats['successful_landings']}")
-        
-        # Print termination reasons
-        completed = self.env.get_completed_landers()
-        for reason, count in completed.items():
-            print(f"{reason}: {count}")
+        print(f"Max Fitness: {gen_stats['max_fitness']:.2f}")
+        print(f"Avg Fitness: {gen_stats['avg_fitness']:.2f}")
+        print(f"Successful Landings: {gen_stats['successful_landings']}")
         
         self.generation += 1
+        
+        # Save checkpoint if needed
+        if self.generation % self.checkpoint_interval == 0:
+            self.save_checkpoint()
     
     def run(self, config_path: str, n_generations: int = 50) -> Tuple[Optional[neat.genome.DefaultGenome], neat.statistics.StatisticsReporter]:
         """
@@ -178,6 +190,11 @@ class LanderTrainer:
     
     def _save_training_stats(self) -> None:
         """Save training statistics and generate plots"""
+        # Don't try to plot if we have no complete generations
+        if self.generation == 0 or not self.generation_stats:
+            print("No training statistics to plot")
+            return
+        
         # Save raw statistics
         stats_dict = {
             'generation': list(range(self.generation)),

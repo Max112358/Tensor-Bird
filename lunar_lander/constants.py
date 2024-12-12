@@ -10,19 +10,16 @@ GROUND_HEIGHT = 550  # Height of the ground from top of screen
 LANDING_PAD_WIDTH = 100
 TERRAIN_ROUGHNESS = 20  # Max height variation in terrain
 
-# Training constants
-MAX_STEPS_PER_EPISODE = 2000
-MIN_STEPS_BEFORE_DONE = 200
-
 # Rewards
 LANDING_REWARD = 100.0
 CRASH_PENALTY = -100.0
 OUT_OF_BOUNDS_PENALTY = -100.0
 OUT_OF_FUEL_PENALTY = -100.0
+SAFETY_VIOLATION_PENALTY = -10000.0  # Large penalty for safety violations
 
 # Safe landing parameters
 SAFE_LANDING_VELOCITY = 80.0  # Maximum safe landing velocity
-SAFE_LANDING_ANGLE = 15.0  # Maximum safe landing velocity
+SAFE_LANDING_ANGLE = 18.0  # Maximum safe landing velocity
 LANDING_PAD_TOLERANCE = 5    # How close to pad height counts as landing
 
 # Physics constants 
