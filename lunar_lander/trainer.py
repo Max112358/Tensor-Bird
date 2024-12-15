@@ -6,6 +6,7 @@ import os
 import pickle
 from typing import Tuple, Optional, Dict, Any
 import matplotlib.pyplot as plt
+from input_handler import InputHandler
 
 class LanderTrainer:
     def __init__(self, num_landers: int = 20, checkpoint_interval: int = 5, fast_mode: bool = False):
@@ -18,6 +19,7 @@ class LanderTrainer:
             fast_mode: Whether to run in fast mode without rendering
         """
         self.env = MultiLanderEnv(num_landers=num_landers, fast_mode=fast_mode)
+        self.input_handler = InputHandler()  # Add input handler
         self.generation = 0
         self.checkpoint_interval = checkpoint_interval
         self.best_fitness = float('-inf')
@@ -65,11 +67,14 @@ class LanderTrainer:
             while not done:
                 # Get actions for each lander using its own network
                 actions = []
-                for state, network in zip(states, batch_networks):
+                for idx, (network, lander) in enumerate(zip(batch_networks, self.env.landers)):
                     if network is None:
                         actions.append(0)  # No-op for padding networks
                     else:
                         try:
+                            # Use input handler to get normalized state
+                            state = self.input_handler.get_state(lander, self.env.terrain)
+                            
                             # Get raw outputs from network
                             output = network.activate(state)
                             

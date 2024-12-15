@@ -1,10 +1,11 @@
-from typing import List, Tuple, Dict
 import numpy as np
 import math
 from lander import Lander
 from terrain import Terrain
 from renderer import Renderer
 from game_init import get_constants
+from typing import List, Tuple, Dict, Any
+
 
 class MultiLanderEnv:
     def __init__(self, num_landers: int = 20, fast_mode: bool = False):
@@ -29,7 +30,7 @@ class MultiLanderEnv:
         self.running = True
         self.reset()
     
-    def step(self, actions: List[int]) -> Tuple[List[np.ndarray], List[float], List[bool], Dict]:
+    def step(self, actions: 'List[int]') -> 'Tuple[List[np.ndarray], List[float], List[bool], Dict[str, Any]]':
         """Take environment step for all landers"""
         const = get_constants()
         self.steps += 1
