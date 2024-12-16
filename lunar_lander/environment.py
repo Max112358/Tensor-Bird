@@ -39,6 +39,9 @@ class MultiLanderEnv:
         dones = []
         info = {'landers': []}
         
+        # Calculate survival time bonus that scales with multiple factors
+        max_survival_bonus = 20.0  # Base survival reward per frame
+        
         # Process each lander
         for i, (lander, action) in enumerate(zip(self.landers, actions)):
             state = lander.step(action)
@@ -50,13 +53,53 @@ class MultiLanderEnv:
             velocity_penalty = abs(lander.velocity_x) + abs(lander.velocity_y)
             angle_penalty = abs(lander.angle)
             
+            # Calculate various ratios for survival bonus
+            fuel_ratio = lander.fuel / const.INITIAL_FUEL  # 1.0 is full fuel
+            distance_ratio = 1.0 - (distance_to_pad / self.width)  # 1.0 when at pad
+            height_ratio = height_diff / self.height  # Higher when higher up
+            
+            # Calculate angle ratio based on safe landing angle
+            current_angle_degrees = abs(math.degrees(lander.angle))
+            angle_ratio = max(0, 1.0 - (current_angle_degrees / const.SAFE_LANDING_ANGLE))
+            # This gives 1.0 when perfectly upright, and 0.0 when at or beyond safe angle
+            
+            # Calculate optimal vertical velocity (80% of safe landing speed)
+            optimal_velocity_y = 0.8 * const.SAFE_LANDING_VELOCITY
+
+            # Example values for context:
+            # const.SAFE_LANDING_VELOCITY = 80.0
+            # optimal_velocity_y = 64.0 (80% of safe landing velocity)
+            # lander.velocity_y ranges from negative (going up) to positive (going down)
+
+            if lander.velocity_y <= optimal_velocity_y:
+                # This branch handles when we're moving up (negative) or moving down slower than optimal
+                # Example: if velocity_y = 32.0, ratio = 32/64 = 0.5
+                # Example: if velocity_y = -10.0, ratio = -10/64 = -0.15625
+                velocity_ratio = lander.velocity_y / optimal_velocity_y
+            else:
+                # This branch handles when we're moving down faster than optimal but maybe still safe
+                # Example: if velocity_y = 70.0:
+                # ratio = 1.0 - ((70 - 64) / (80 - 64)) = 1.0 - (6/16) = 0.625
+                velocity_ratio = max(0, 1.0 - ((lander.velocity_y - optimal_velocity_y) / 
+                                            (const.SAFE_LANDING_VELOCITY - optimal_velocity_y)))
+
+            # Calculate survival bonus that encourages staying alive while maintaining control
+            survival_bonus = max_survival_bonus * (
+                0.00 * fuel_ratio +      # Weight fuel conservation
+                0.5 * distance_ratio +   # Weight proximity to target 
+                0.15 * height_ratio +    # Weight maintaining height
+                0.15 * angle_ratio +     # Weight staying upright 
+                0.20 * velocity_ratio    # Weight maintaining optimal vertical speed
+            )
+            
             # Track reward components
             reward_components = {
-                'distance_reward': -50.0 * (distance_to_pad / self.width),
-                'height_reward': -10.0 * (height_diff / self.height),
-                'velocity_penalty': -1.0 * velocity_penalty / 100.0,
-                'angle_penalty': -2.0 * angle_penalty,
-                'fuel_penalty': -0.1 * (const.INITIAL_FUEL - lander.fuel) / const.INITIAL_FUEL,
+                'distance_reward': -0.0 * (distance_to_pad / self.width),
+                'height_reward': -0.0 * (height_diff / self.height),
+                'velocity_penalty': -0.0 * velocity_penalty / 100.0,
+                'angle_penalty': -0.0 * angle_penalty,
+                'fuel_penalty': -0.0 * (const.INITIAL_FUEL - lander.fuel) / const.INITIAL_FUEL,
+                'survival_bonus': survival_bonus,
                 'terminal_reward': 0.0
             }
             
@@ -74,27 +117,7 @@ class MultiLanderEnv:
                 })
                 continue
             
-            # Check safety violations first
-            terminate = False
-            
-            '''
-            # Check for unsafe angle
-            if abs(math.degrees(lander.angle)) > const.SAFE_LANDING_ANGLE:
-                reward_components['terminal_reward'] = const.SAFETY_VIOLATION_PENALTY
-                reward += const.SAFETY_VIOLATION_PENALTY
-                terminate = True
-                lander.terminate('unsafe_angle')
-            
-            # Check for unsafe velocity
-            elif abs(lander.velocity_y) > const.SAFE_LANDING_VELOCITY:
-                reward_components['terminal_reward'] = const.SAFETY_VIOLATION_PENALTY
-                reward += const.SAFETY_VIOLATION_PENALTY
-                terminate = True
-                lander.terminate('unsafe_velocity')
-            '''
-            
-            
-            # If no safety violations, check other termination conditions
+            # Check termination conditions
             if self.terrain.check_landing(lander.x, lander.y, lander.velocity_y, lander):
                 reward_components['terminal_reward'] = const.LANDING_REWARD
                 reward += const.LANDING_REWARD
@@ -115,6 +138,8 @@ class MultiLanderEnv:
                 reward += const.OUT_OF_FUEL_PENALTY
                 terminate = True
                 lander.terminate('out_of_fuel')
+            else:
+                terminate = False
             
             # Update episode rewards and info
             self.episode_rewards[i] += reward

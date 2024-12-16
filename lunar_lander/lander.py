@@ -3,6 +3,7 @@ import numpy as np
 import math
 import terrain as Terrain
 from game_init import get_constants
+import random
 
 class Lander:
     def __init__(self, x: float, y: float, terrain: Terrain):
@@ -25,11 +26,16 @@ class Lander:
         # Initialize physics engine
         self.physics = RocketPhysics(physics_config)
         
+        
+        # Generate a small random initial angle between -10 and 10 degrees
+        # this is important as it forces the AI to learn to rotate, rather than getting stuck in local optima of remaining perfectly vertical
+        initial_angle = math.radians(random.uniform(-10, 10))
+        
         # Set initial position
         self.physics.state = PhysicsState(
             position=np.array([x / const.PIXELS_PER_METER, y / const.PIXELS_PER_METER]),
             velocity=np.zeros(2),
-            angle=0.0,
+            angle=initial_angle,
             angular_velocity=0.0
         )
         

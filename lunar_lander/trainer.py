@@ -25,6 +25,7 @@ class LanderTrainer:
         self.best_fitness = float('-inf')
         self.generation_stats = []
         self.fast_mode = fast_mode
+        self.population = None
         
         # Create checkpoint directory if it doesn't exist
         os.makedirs('checkpoints', exist_ok=True)
@@ -167,13 +168,14 @@ class LanderTrainer:
         if self.generation % self.checkpoint_interval == 0:
             self.save_checkpoint()
     
-    def run(self, config_path: str, n_generations: int = 50) -> Tuple[Optional[neat.genome.DefaultGenome], neat.statistics.StatisticsReporter]:
+    def run(self, config_path: str, n_generations: int = 50, checkpoint_file: str = None) -> Tuple[Optional[neat.genome.DefaultGenome], neat.statistics.StatisticsReporter]:
         """
         Run the training process
         
         Args:
             config_path: Path to NEAT configuration file
             n_generations: Number of generations to train
+            checkpoint_file: Path to checkpoint file to restore from
             
         Returns:
             Tuple of (winner genome, statistics reporter)
@@ -187,15 +189,36 @@ class LanderTrainer:
             config_path
         )
         
-        # Create population and add reporters
-        pop = neat.Population(config)
-        pop.add_reporter(neat.StdOutReporter(True))
+        if checkpoint_file:
+            # Restore population from checkpoint
+            print(f"Restoring from checkpoint: {checkpoint_file}")
+            self.population = neat.Checkpointer.restore_checkpoint(checkpoint_file)
+            # Restore generation count from checkpoint filename
+            try:
+                self.generation = int(checkpoint_file.split('-')[-1])
+            except ValueError:
+                print("Could not determine generation from checkpoint filename")
+        else:
+            # Create new population
+            self.population = neat.Population(config)
+            
+        # Add reporters
+        self.population.add_reporter(neat.StdOutReporter(True))
         stats = neat.StatisticsReporter()
-        pop.add_reporter(stats)
+        self.population.add_reporter(stats)
+        
+        # Add checkpointer
+        checkpointer = neat.Checkpointer(
+            generation_interval=self.checkpoint_interval,
+            time_interval_seconds=None,
+            filename_prefix='checkpoints/neat-checkpoint-'
+        )
+        self.population.add_reporter(checkpointer)
         
         try:
             # Run for specified number of generations
-            winner = pop.run(self.eval_genomes, n_generations)
+            remaining_generations = n_generations - self.generation
+            winner = self.population.run(self.eval_genomes, remaining_generations)
             
             # Save final statistics
             self._save_training_stats()

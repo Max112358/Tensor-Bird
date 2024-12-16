@@ -2,7 +2,7 @@
 fitness_criterion     = max
 fitness_threshold     = 5000000000000
 pop_size             = 20
-reset_on_extinction  = False
+reset_on_extinction  = True
 
 [DefaultGenome]
 # node activation options
@@ -11,20 +11,20 @@ activation_mutate_rate = 0.0
 activation_options     = tanh
 
 # node add/remove rates
-node_add_prob           = 0.2
-node_delete_prob        = 0.2
+node_add_prob           = 0.9
+node_delete_prob        = 0.9
 
 # node bias options
 bias_init_mean          = 0.0
 bias_init_stdev         = 1.0
 bias_max_value          = 30.0
 bias_min_value          = -30.0
-bias_mutate_power       = 0.5
-bias_mutate_rate        = 0.7
+bias_mutate_power       = 0.7
+bias_mutate_rate        = 0.9
 bias_replace_rate       = 0.1
 
 # network parameters
-num_hidden              = 20
+num_hidden              = 200
 num_inputs             = 6
 num_outputs            = 3
 feed_forward          = True
@@ -32,7 +32,7 @@ initial_connection     = full_nodirect
 
 # node aggregation options
 aggregation_default     = sum
-aggregation_mutate_rate = 0.0
+aggregation_mutate_rate = 0.9
 aggregation_options     = sum
 
 # node response options
@@ -40,17 +40,17 @@ response_init_mean      = 1.0
 response_init_stdev     = 0.0
 response_max_value      = 30.0
 response_min_value      = -30.0
-response_mutate_power   = 0.0
-response_mutate_rate    = 0.0
-response_replace_rate   = 0.0
+response_mutate_power   = 0.9
+response_mutate_rate    = 0.9
+response_replace_rate   = 0.9
 
 # connection add/remove rates
-conn_add_prob           = 0.5
-conn_delete_prob        = 0.5
+conn_add_prob           = 0.8
+conn_delete_prob        = 0.8
 
 # connection enable options
 enabled_default         = True
-enabled_mutate_rate     = 0.01
+enabled_mutate_rate     = 0.15
 
 # connection weight options
 weight_init_mean        = 0.0
@@ -72,8 +72,9 @@ compatibility_threshold = 4.0
 [DefaultStagnation]
 species_fitness_func = max
 max_stagnation      = 20
-species_elitism     = 2
+species_elitism     = 1
 
 [DefaultReproduction]
 elitism            = 2
 survival_threshold = 0.2
+min_species_size = 0
