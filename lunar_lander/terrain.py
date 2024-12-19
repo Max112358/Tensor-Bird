@@ -20,6 +20,7 @@ class Terrain:
         self.points = self._generate()
         self._generate_segments()
 
+    '''
     def _generate(self) -> List[Tuple[int, int]]:
         """Generate terrain with random height variations and flat landing pad"""
         const = get_constants()
@@ -54,6 +55,39 @@ class Terrain:
             x += segment_width
             
         return points
+    '''
+    def _generate(self) -> List[Tuple[int, int]]:
+        """Generate terrain with fixed height variations and flat landing pad"""
+        points = []
+        segment_width = 20  # Distance between terrain points
+        
+        pad_left = self.landing_pad_x - self.landing_pad_width/2
+        pad_right = self.landing_pad_x + self.landing_pad_width/2
+        
+        # Generate left side of terrain with fixed variations
+        x = 0
+        while x < pad_left:
+            # Create a gentle slope up to the pad
+            height_offset = 20 * (x / pad_left)  # Gradual rise
+            new_height = self.ground_height - height_offset
+            points.append((int(x), int(new_height)))
+            x += segment_width
+            
+        # Add landing pad (ensure it connects smoothly)
+        points.append((int(pad_left), self.ground_height))  # Left edge of pad
+        points.append((int(pad_right), self.ground_height)) # Right edge of pad
+        
+        # Generate right side of terrain with fixed variations
+        x = pad_right
+        while x <= self.width:
+            # Create a gentle slope down from the pad
+            height_offset = 20 * ((x - pad_right) / (self.width - pad_right))  # Gradual descent
+            new_height = self.ground_height - height_offset
+            points.append((int(x), int(new_height)))
+            x += segment_width
+            
+        return points
+
 
     def _generate_segments(self):
         """Create line segments from points for collision detection"""
@@ -128,5 +162,6 @@ class Terrain:
         if not hasattr(self, '_landing_pad_x'):
             pad_min = int(self.width * 0.2)
             pad_max = int(self.width * 0.8)
-            self._landing_pad_x = random.randint(pad_min, pad_max)
+            #self._landing_pad_x = random.randint(pad_min, pad_max)
+            self._landing_pad_x = pad_max
         return self._landing_pad_x

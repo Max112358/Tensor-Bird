@@ -1,0 +1,5 @@
+2024-12-19 11:49:54,667 - INFO - NEAT library patched with debug logging
+2024-12-19 11:49:54,668 - INFO - Creating new population
+2024-12-19 11:49:54,669 - DEBUG - 
+Starting speciation for generation 0
+2024-12-19 11:49:54,669 - DEBUG - Population size: 20

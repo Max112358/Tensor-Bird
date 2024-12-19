@@ -11,9 +11,8 @@ class InputHandler:
     
     def get_state(self, lander, terrain) -> np.ndarray:
         """
-        Get the normalized state vector exactly as the AI sees it.
-        Returns 6 normalized inputs:
-        - velocity_x: raw x velocity 
+        Get the normalized state vector.
+        Returns 5 normalized inputs:
         - velocity_y: y velocity normalized by safe landing velocity
         - angle: angle normalized by safe landing angle
         - angular_velocity: raw angular velocity
@@ -35,14 +34,12 @@ class InputHandler:
         distance_to_pad_y = np.clip(raw_distance_y / max_distance_y, -1.0, 1.0)
         
         # Normalize velocities and angles
-        raw_vel_x = lander.velocity_x
         norm_vel_y = lander.velocity_y / self.const.SAFE_LANDING_VELOCITY
         angle_degrees = math.degrees(lander.angle)
         norm_angle = angle_degrees / self.const.SAFE_LANDING_ANGLE
         angular_vel = lander.angular_velocity
         
         return np.array([
-            raw_vel_x,           # X velocity (unchanged)
             norm_vel_y,          # Y velocity (relative to safe landing velocity) 
             norm_angle,          # Angle (relative to safe landing angle)
             angular_vel,         # Angular velocity (unchanged)
@@ -55,9 +52,7 @@ class InputHandler:
         return {
             'distance_x': terrain.landing_pad_x - lander.x,  # Flipped raw signed distance
             'distance_y': terrain.ground_height - lander.y,  # Flipped raw signed distance
-            'velocity_x': lander.velocity_x,
             'velocity_y': lander.velocity_y,
             'angle': math.degrees(lander.angle),
-            'angular_velocity': math.degrees(lander.angular_velocity),
-            'fuel': lander.fuel
+            'angular_velocity': math.degrees(lander.angular_velocity)
         }

@@ -1,0 +1,41 @@
+2024-12-19 12:23:54,766 - INFO - Initializing LanderTrainer
+2024-12-19 12:23:54,767 - DEBUG - Environment initialized
+2024-12-19 12:23:54,767 - DEBUG - Input handler initialized
+2024-12-19 12:23:54,767 - INFO - NEAT library patched with genome logging
+2024-12-19 12:23:54,767 - INFO - LanderTrainer initialization complete
+2024-12-19 12:23:54,768 - INFO - Creating new population
+2024-12-19 12:23:55,525 - INFO - 
+Best Genome in Generation 0:
+2024-12-19 12:23:55,526 - INFO - Fitness: 15741.939377949959
+2024-12-19 12:23:55,526 - INFO - Network Structure:
+2024-12-19 12:23:55,526 - INFO - Nodes:
+2024-12-19 12:23:55,527 - INFO -   Node 0: DefaultNodeGene(key=0, bias=-1.5694396910393056, response=-0.001993403405659011, activation=tanh, aggregation=sum)
+2024-12-19 12:23:55,527 - INFO -   Node 1: DefaultNodeGene(key=1, bias=1.3287085764496247, response=1.157107903360665, activation=tanh, aggregation=sum)
+2024-12-19 12:23:55,527 - INFO -   Node 2: DefaultNodeGene(key=2, bias=0.2748706210871916, response=3.017604296209765, activation=tanh, aggregation=sum)
+2024-12-19 12:23:55,527 - INFO - Connections:
+2024-12-19 12:23:55,527 - INFO -   (-1, 0): weight=0.20691080007445395, enabled=True
+2024-12-19 12:23:55,527 - INFO -   (-1, 1): weight=2.818672180671593, enabled=True
+2024-12-19 12:23:55,527 - INFO -   (-1, 2): weight=0.6546326447614187, enabled=True
+2024-12-19 12:23:55,527 - INFO -   (-2, 0): weight=0.26661110395637366, enabled=True
+2024-12-19 12:23:55,527 - INFO -   (-2, 1): weight=1.0239898001506949, enabled=True
+2024-12-19 12:23:55,527 - INFO -   (-2, 2): weight=1.3756489026081373, enabled=True
+2024-12-19 12:23:55,527 - INFO -   (-3, 0): weight=-1.5613891980078392, enabled=True
+2024-12-19 12:23:55,529 - INFO -   (-3, 1): weight=-0.4809402856990489, enabled=True
+2024-12-19 12:23:55,529 - INFO -   (-3, 2): weight=1.256449641379819, enabled=True
+2024-12-19 12:23:55,529 - INFO -   (-4, 0): weight=-0.5930430491824022, enabled=True
+2024-12-19 12:23:55,529 - INFO -   (-4, 1): weight=0.4405434110200266, enabled=True
+2024-12-19 12:23:55,529 - INFO -   (-4, 2): weight=-2.8507953081236557, enabled=True
+2024-12-19 12:23:55,529 - INFO -   (-5, 0): weight=-2.216150607626488, enabled=True
+2024-12-19 12:23:55,529 - INFO -   (-5, 1): weight=-2.72641961191735, enabled=True
+2024-12-19 12:23:55,529 - INFO -   (-5, 2): weight=-1.418870806514435, enabled=True
+2024-12-19 12:23:55,529 - ERROR - Training stopped due to error: 'Population' object has no attribute 'best_fitness'
+Traceback (most recent call last):
+  File "C:\Users\maxjo\Documents\GitHub\Tensor-Bird\lunar_lander\trainer.py", line 253, in run
+    winner = self.population.run(self.eval_genomes, remaining_generations)
+  File "C:\Users\maxjo\Documents\GitHub\Tensor-Bird\lunar_lander\best_genome_logger.py", line 82, in eval_genomes_wrapper
+    return original_eval_genomes(self, wrapped_fitness, n)
+  File "C:\Users\maxjo\AppData\Local\Programs\Python\Python39\lib\site-packages\neat\population.py", line 89, in run
+    fitness_function(list(iteritems(self.population)), self.config)
+  File "C:\Users\maxjo\Documents\GitHub\Tensor-Bird\lunar_lander\best_genome_logger.py", line 75, in wrapped_fitness
+    if best_fitness > self.best_fitness:
+AttributeError: 'Population' object has no attribute 'best_fitness'

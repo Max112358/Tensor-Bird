@@ -1,0 +1,26 @@
+2024-12-19 11:51:34,763 - INFO - NEAT library patched with debug logging
+2024-12-19 11:51:34,764 - INFO - 
+NEAT Configuration:
+2024-12-19 11:51:34,764 - INFO - Population size: 20
+2024-12-19 11:51:34,764 - INFO - 
+Reproduction Config:
+2024-12-19 11:51:34,765 - INFO - Elitism: 1
+2024-12-19 11:51:34,765 - INFO - Survival threshold: 0.5
+2024-12-19 11:51:34,765 - INFO - 
+Species Config:
+2024-12-19 11:51:34,765 - INFO - Compatibility threshold: 50.0
+2024-12-19 11:51:34,765 - INFO - 
+Stagnation Config:
+2024-12-19 11:51:34,765 - INFO - Species elitism: 3
+2024-12-19 11:51:34,765 - INFO - Max stagnation: 40
+2024-12-19 11:51:34,774 - INFO - Creating new population
+2024-12-19 11:51:34,775 - DEBUG - 
+Starting speciation for generation 0
+2024-12-19 11:51:34,775 - DEBUG - Population size: 20
+2024-12-19 11:51:34,775 - DEBUG - Compatibility threshold: 50.0
+2024-12-19 11:51:34,775 - DEBUG - 
+Speciation complete
+2024-12-19 11:51:34,775 - DEBUG - 
+Species 1:
+2024-12-19 11:51:34,775 - DEBUG - Size: 20
+2024-12-19 11:51:34,775 - DEBUG - Representative: genome 1

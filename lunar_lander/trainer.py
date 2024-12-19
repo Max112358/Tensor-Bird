@@ -7,30 +7,55 @@ import pickle
 from typing import Tuple, Optional, Dict, Any
 import matplotlib.pyplot as plt
 from input_handler import InputHandler
+from best_genome_logger import BestGenomeLogger
+
+
 
 class LanderTrainer:
     def __init__(self, num_landers: int = 20, checkpoint_interval: int = 5, fast_mode: bool = False):
         """
-        Initialize the trainer
-        
-        Args:
-            num_landers: Number of landers to train simultaneously
-            checkpoint_interval: How often to save checkpoints (in generations)
-            fast_mode: Whether to run in fast mode without rendering
+        Initialize the trainer with genome logging
         """
-        self.env = MultiLanderEnv(num_landers=num_landers, fast_mode=fast_mode)
-        self.input_handler = InputHandler()  # Add input handler
-        self.generation = 0
-        self.checkpoint_interval = checkpoint_interval
-        self.best_fitness = float('-inf')
-        self.generation_stats = []
-        self.fast_mode = fast_mode
-        self.population = None
+        # Initialize genome logger first
+        self.genome_logger = BestGenomeLogger()
+        self.logger = self.genome_logger.logger
+        self.logger.info("Initializing LanderTrainer")
         
-        # Create checkpoint directory if it doesn't exist
-        os.makedirs('checkpoints', exist_ok=True)
+        try:
+            # Initialize components
+            self.env = MultiLanderEnv(num_landers=num_landers, fast_mode=fast_mode)
+            self.logger.debug("Environment initialized")
+            
+            self.input_handler = InputHandler()
+            self.logger.debug("Input handler initialized")
+            
+            # Training state
+            self.generation = 0
+            self.checkpoint_interval = checkpoint_interval
+            self.best_fitness = float('-inf')
+            self.generation_stats = []
+            self.fast_mode = fast_mode
+            self.population = None
+            
+            # Create required directories
+            os.makedirs('checkpoints', exist_ok=True)
+            os.makedirs('outputs', exist_ok=True)
+            
+            # Patch NEAT with genome logging
+            self.genome_logger.patch_neat()
+            self.logger.info("LanderTrainer initialization complete")
+            
+        except Exception as e:
+            if hasattr(self, 'logger'):
+                self.logger.error(f"Error during trainer initialization: {str(e)}", exc_info=True)
+            else:
+                print(f"Failed to initialize trainer: {str(e)}")
+            raise
         
     def eval_genomes(self, genomes, config) -> None:
+        print("\nInitial fitness values:")
+        for genome_id, genome in genomes:
+            genome.fitness = None  # Reset fitness even for elite genomes
         """Evaluate each genome"""
         # Initialize generation statistics
         gen_stats = {
@@ -82,6 +107,7 @@ class LanderTrainer:
                             # Default to no thrust
                             action = 0
                             
+                            '''
                             # Check thrusters in priority order (main > side thrusters)
                             if len(output) >= 3:  # Ensure we have all three outputs
                                 if output[1] > 0.5:  # Main thruster has priority
@@ -89,6 +115,22 @@ class LanderTrainer:
                                 elif output[0] > 0.5:  # Left thruster
                                     action = 1
                                 elif output[2] > 0.5:  # Right thruster
+                                    action = 3
+                            '''
+                                    
+                            if len(output) >= 3:
+                                # Convert from [-1,1] to [0,1] range if using tanh activation
+                                normalized_outputs = [(x + 1) / 2 for x in output]
+                                
+                                # Use a lower threshold (e.g., 0.3)
+                                threshold = 0.3
+                                
+                                # Check thrusters with lower threshold
+                                if normalized_outputs[1] > threshold:  # Main thruster
+                                    action = 2
+                                elif normalized_outputs[0] > threshold:  # Left thruster
+                                    action = 1
+                                elif normalized_outputs[2] > threshold:  # Right thruster
                                     action = 3
                             
                             actions.append(action)
@@ -109,7 +151,7 @@ class LanderTrainer:
                         f"Landed: {completed.get('landed', 0)} | " +
                         f"Crashed: {completed.get('crashed', 0)} | " +
                         f"Out of Bounds: {completed.get('out_of_bounds', 0)} | " +
-                        f"Out of Fuel: {completed.get('out_of_fuel', 0)}", end='')
+                        f"Out of Fuel: {completed.get('out_of_fuel', 0)}", end='   ')
                     
                     if info.get('quit', False):
                         print("\nWindow closed, ending training")
@@ -168,72 +210,89 @@ class LanderTrainer:
         if self.generation % self.checkpoint_interval == 0:
             self.save_checkpoint()
     
-    def run(self, config_path: str, n_generations: int = 50, checkpoint_file: str = None) -> Tuple[Optional[neat.genome.DefaultGenome], neat.statistics.StatisticsReporter]:
-        """
-        Run the training process
-        
-        Args:
-            config_path: Path to NEAT configuration file
-            n_generations: Number of generations to train
-            checkpoint_file: Path to checkpoint file to restore from
-            
-        Returns:
-            Tuple of (winner genome, statistics reporter)
-        """
-        # Load configuration
-        config = neat.Config(
-            neat.DefaultGenome,
-            neat.DefaultReproduction,
-            neat.DefaultSpeciesSet,
-            neat.DefaultStagnation,
-            config_path
-        )
-        
-        if checkpoint_file:
-            # Restore population from checkpoint
-            print(f"Restoring from checkpoint: {checkpoint_file}")
-            self.population = neat.Checkpointer.restore_checkpoint(checkpoint_file)
-            # Restore generation count from checkpoint filename
-            try:
-                self.generation = int(checkpoint_file.split('-')[-1])
-            except ValueError:
-                print("Could not determine generation from checkpoint filename")
-        else:
-            # Create new population
-            self.population = neat.Population(config)
-            
-        # Add reporters
-        self.population.add_reporter(neat.StdOutReporter(True))
-        stats = neat.StatisticsReporter()
-        self.population.add_reporter(stats)
-        
-        # Add checkpointer
-        checkpointer = neat.Checkpointer(
-            generation_interval=self.checkpoint_interval,
-            time_interval_seconds=None,
-            filename_prefix='checkpoints/neat-checkpoint-'
-        )
-        self.population.add_reporter(checkpointer)
-        
+    def run(self, config_path: str, n_generations: int = 50, 
+            checkpoint_file: str = None) -> Tuple[Optional[neat.genome.DefaultGenome], 
+                                                neat.statistics.StatisticsReporter]:
+        """Run the training process with genome logging"""
         try:
+            # Load configuration
+            config = neat.Config(
+                neat.DefaultGenome,
+                neat.DefaultReproduction,
+                neat.DefaultSpeciesSet,
+                neat.DefaultStagnation,
+                config_path
+            )
+            
+            if checkpoint_file:
+                self.logger.info(f"Restoring from checkpoint: {checkpoint_file}")
+                self.population = neat.Checkpointer.restore_checkpoint(checkpoint_file)
+                try:
+                    self.generation = int(checkpoint_file.split('-')[-1])
+                    self.logger.info(f"Restored to generation {self.generation}")
+                except ValueError:
+                    self.logger.warning("Could not determine generation from checkpoint filename")
+            else:
+                self.logger.info("Creating new population")
+                self.population = neat.Population(config)
+            
+            # Add reporters
+            stats = neat.StatisticsReporter()
+            self.population.add_reporter(stats)
+            
+            # Add checkpointer
+            checkpointer = neat.Checkpointer(
+                generation_interval=self.checkpoint_interval,
+                time_interval_seconds=None,
+                filename_prefix='checkpoints/neat-checkpoint-'
+            )
+            self.population.add_reporter(checkpointer)
+            
             # Run for specified number of generations
             remaining_generations = n_generations - self.generation
             winner = self.population.run(self.eval_genomes, remaining_generations)
             
+            if winner:
+                self.logger.info("\nWinner found!")
+                self.logger.info(f"Winner fitness: {winner.fitness}")
+                
+                # Save the winner
+                winner_path = os.path.join('outputs', 'winner.pkl')
+                self.logger.info(f"Saving winner to {winner_path}")
+                with open(winner_path, 'wb') as f:
+                    pickle.dump(winner, f)
+                    
+                # Get best overall genome from logger
+                best_genome, best_fitness = self.genome_logger.get_best_genome()
+                if best_genome is not None:
+                    self.logger.info(f"\nBest Overall Performance:")
+                    self.logger.info(f"Fitness: {best_fitness}")
+                    
+                    # Save best genome
+                    best_path = os.path.join('outputs', 'best_genome.pkl')
+                    self.logger.info(f"Saving best genome to {best_path}")
+                    with open(best_path, 'wb') as f:
+                        pickle.dump(best_genome, f)
+            else:
+                self.logger.info("\nNo winner found")
+                
             # Save final statistics
             self._save_training_stats()
-            
             return winner, stats
             
         except KeyboardInterrupt:
-            print("\nTraining interrupted by user")
+            self.logger.info("\nTraining interrupted by user")
             self._save_training_stats()
             return None, stats
             
         except Exception as e:
-            print(f"\nTraining stopped due to error: {e}")
+            self.logger.error(f"Training stopped due to error: {str(e)}", exc_info=True)
             self._save_training_stats()
             raise
+        
+        finally:
+            if hasattr(self, 'env'):
+                self.env.close()
     
     def _save_best_genome(self, genome: neat.genome.DefaultGenome) -> None:
         """Save the best performing genome"""

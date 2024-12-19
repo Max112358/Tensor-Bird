@@ -1,0 +1,17 @@
+2024-12-19 12:23:09,594 - INFO - Initializing LanderTrainer
+2024-12-19 12:23:09,594 - DEBUG - Environment initialized
+2024-12-19 12:23:09,595 - DEBUG - Input handler initialized
+2024-12-19 12:23:09,595 - INFO - NEAT library patched with genome logging
+2024-12-19 12:23:09,595 - INFO - LanderTrainer initialization complete
+2024-12-19 12:23:09,596 - INFO - Creating new population
+2024-12-19 12:23:09,824 - ERROR - Training stopped due to error: 'Population' object has no attribute 'logger'
+Traceback (most recent call last):
+  File "C:\Users\maxjo\Documents\GitHub\Tensor-Bird\lunar_lander\trainer.py", line 253, in run
+    winner = self.population.run(self.eval_genomes, remaining_generations)
+  File "C:\Users\maxjo\Documents\GitHub\Tensor-Bird\lunar_lander\best_genome_logger.py", line 81, in eval_genomes_wrapper
+    return original_eval_genomes(self, wrapped_fitness, n)
+  File "C:\Users\maxjo\AppData\Local\Programs\Python\Python39\lib\site-packages\neat\population.py", line 89, in run
+    fitness_function(list(iteritems(self.population)), self.config)
+  File "C:\Users\maxjo\Documents\GitHub\Tensor-Bird\lunar_lander\best_genome_logger.py", line 63, in wrapped_fitness
+    self.logger.info(f"\nBest Genome in Generation {self.generation}:")
+AttributeError: 'Population' object has no attribute 'logger'

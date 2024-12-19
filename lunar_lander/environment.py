@@ -170,6 +170,7 @@ class MultiLanderEnv:
         
         return states, rewards, [all_done] * len(self.landers), info
     
+    
     def reset(self) -> List[np.ndarray]:
         """Reset environment and return initial states"""
         # Generate new terrain
@@ -191,6 +192,7 @@ class MultiLanderEnv:
         else:
             spawn_x = self.width * 0.2  # Spawn at 20% of screen width
         
+        spawn_x = self.width * 0.2  # Spawn at 20% of screen width
         spawn_y = self.height * 0.1  # Start near top of screen
         
         # Create new landers all at the same position

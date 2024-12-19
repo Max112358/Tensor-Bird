@@ -125,10 +125,31 @@ def create_dirs():
     for directory in directories:
         os.makedirs(directory, exist_ok=True)
 
+def get_neat_config_value(config_path: str, param_name: str, section: str = 'NEAT') -> int:
+    """
+    Read a specific parameter from the NEAT config file
+    Returns the parameter value or a default if not found
+    """
+    import configparser
+    config = configparser.ConfigParser()
+    config.read(config_path)
+    try:
+        return int(config[section][param_name])
+    except (KeyError, ValueError):
+        print(f"Warning: Could not read {param_name} from config file")
+        return 20  # Default fallback value
+
 def main():
     # Create visualize module if it doesn't exist
     if not os.path.exists('visualize.py'):
         create_visualize_module()
+    
+    # Get configuration file path
+    local_dir = os.path.dirname(__file__)
+    config_path = os.path.join(local_dir, "config-lunar.txt")
+    
+    # Read population size from NEAT config
+    pop_size = get_neat_config_value(config_path, 'pop_size')
     
     # Now we can safely import visualize
     import visualize
@@ -138,29 +159,24 @@ def main():
     parser.add_argument('--fast', action='store_true', help='Run in fast mode without rendering')
     parser.add_argument('--checkpoint', type=str, help='Path to checkpoint file to restore from')
     parser.add_argument('--generations', type=int, default=200000, help='Number of generations to train')
-    parser.add_argument('--num-landers', type=int, default=20, help='Number of landers to train simultaneously')
-    parser.add_argument('--checkpoint-interval', type=int, default=250, help='How often to save checkpoints (in generations)')
+    parser.add_argument('--num-landers', type=int, default=pop_size, 
+                       help=f'Number of landers to train simultaneously (default: {pop_size} from NEAT config)')
+    parser.add_argument('--checkpoint-interval', type=int, default=250, 
+                       help='How often to save checkpoints (in generations)')
     args = parser.parse_args()
 
-    # Create output directories
-    create_dirs()
+    # Verify config file exists
+    if not os.path.exists(config_path):
+        raise FileNotFoundError(f"Config file not found at {config_path}")
+        
+    # Verify checkpoint file if specified
+    if args.checkpoint and not os.path.exists(args.checkpoint):
+        raise FileNotFoundError(f"Checkpoint file not found at {args.checkpoint}")
 
     try:
         # Initialize game constants first
         constants = game_init.init()
         
-        # Get configuration file path
-        local_dir = os.path.dirname(__file__)
-        config_path = os.path.join(local_dir, "config-lunar.txt")
-        
-        # Verify config file exists
-        if not os.path.exists(config_path):
-            raise FileNotFoundError(f"Config file not found at {config_path}")
-            
-        # Verify checkpoint file if specified
-        if args.checkpoint and not os.path.exists(args.checkpoint):
-            raise FileNotFoundError(f"Checkpoint file not found at {args.checkpoint}")
-
         # Import trainer here to ensure game_init has been called
         from trainer import LanderTrainer
         
