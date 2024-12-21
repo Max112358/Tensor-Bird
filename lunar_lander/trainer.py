@@ -36,6 +36,7 @@ class LanderTrainer:
             self.generation_stats = []
             self.fast_mode = fast_mode
             self.population = None
+            self.best_genome_io = None  # To store inputs and outputs of the best genome
             
             # Create required directories
             os.makedirs('checkpoints', exist_ok=True)
@@ -51,13 +52,16 @@ class LanderTrainer:
             else:
                 print(f"Failed to initialize trainer: {str(e)}")
             raise
-        
+
     def eval_genomes(self, genomes, config) -> None:
-        print("\nInitial fitness values:")
-        for genome_id, genome in genomes:
-            genome.fitness = None  # Reset fitness even for elite genomes
-        """Evaluate each genome"""
-        # Initialize generation statistics
+        """
+        Evaluate each genome.
+        
+        Args:
+            genomes: List of (genome_id, genome) tuples
+            config: NEAT config object
+        """
+        # Initialize evaluation stats
         gen_stats = {
             'max_fitness': float('-inf'),
             'avg_fitness': 0,
@@ -72,14 +76,13 @@ class LanderTrainer:
             net = neat.nn.FeedForwardNetwork.create(genome, config)
             networks.append(net)
             genome_list.append(genome)
-            genome.fitness = 0
-        
-        # Evaluate genomes in batches of num_landers size
+            
+        # Evaluate genomes in batches
         for i in range(0, len(networks), self.env.num_landers):
             batch_networks = networks[i:i + self.env.num_landers]
             batch_genomes = genome_list[i:i + self.env.num_landers]
             
-            # Pad with None if we don't have enough genomes to fill the batch
+            # Pad batch if needed
             while len(batch_networks) < self.env.num_landers:
                 batch_networks.append(None)
                 batch_genomes.append(None)
@@ -91,52 +94,36 @@ class LanderTrainer:
             episode_landings = 0
             
             while not done:
-                # Get actions for each lander using its own network
+                # Get actions for each lander
                 actions = []
                 for idx, (network, lander) in enumerate(zip(batch_networks, self.env.landers)):
                     if network is None:
                         actions.append(0)  # No-op for padding networks
-                    else:
-                        try:
-                            # Use input handler to get normalized state
-                            state = self.input_handler.get_state(lander, self.env.terrain)
+                        continue
+                        
+                    try:
+                        state = self.input_handler.get_state(lander, self.env.terrain)
+                        output = network.activate(state)
+                        
+                        # Convert network output to action
+                        action = 0
+                        if len(output) >= 3:
+                            # Convert from [-1,1] to [0,1] range if using tanh activation
+                            normalized_outputs = [(x + 1) / 2 for x in output]
+                            threshold = 0.3
                             
-                            # Get raw outputs from network
-                            output = network.activate(state)
-                            
-                            # Default to no thrust
-                            action = 0
-                            
-                            '''
-                            # Check thrusters in priority order (main > side thrusters)
-                            if len(output) >= 3:  # Ensure we have all three outputs
-                                if output[1] > 0.5:  # Main thruster has priority
-                                    action = 2
-                                elif output[0] > 0.5:  # Left thruster
-                                    action = 1
-                                elif output[2] > 0.5:  # Right thruster
-                                    action = 3
-                            '''
-                                    
-                            if len(output) >= 3:
-                                # Convert from [-1,1] to [0,1] range if using tanh activation
-                                normalized_outputs = [(x + 1) / 2 for x in output]
+                            # Check thrusters with threshold
+                            if normalized_outputs[1] > threshold:  # Main thruster
+                                action = 2
+                            elif normalized_outputs[0] > threshold:  # Left thruster
+                                action = 1
+                            elif normalized_outputs[2] > threshold:  # Right thruster
+                                action = 3
                                 
-                                # Use a lower threshold (e.g., 0.3)
-                                threshold = 0.3
-                                
-                                # Check thrusters with lower threshold
-                                if normalized_outputs[1] > threshold:  # Main thruster
-                                    action = 2
-                                elif normalized_outputs[0] > threshold:  # Left thruster
-                                    action = 1
-                                elif normalized_outputs[2] > threshold:  # Right thruster
-                                    action = 3
-                            
-                            actions.append(action)
-                        except Exception as e:
-                            print(f"Error activating network: {e}")
-                            actions.append(0)  # Fallback to no thrust
+                        actions.append(action)
+                    except Exception as e:
+                        print(f"Error activating network: {e}")
+                        actions.append(0)
                 
                 try:
                     # Step environment
@@ -158,15 +145,16 @@ class LanderTrainer:
                         self.env.close()
                         raise KeyboardInterrupt
                     
-                    # Update genome fitness for active networks
-                    for genome, reward in zip(batch_genomes, rewards):
+                    # Handle rewards for each genome
+                    for idx, (genome, reward) in enumerate(zip(batch_genomes, rewards)):
                         if genome is not None:
-                            genome.fitness += reward
-                    
-                    # Track successful landings
-                    if completed.get('landed', 0) > episode_landings:
-                        episode_landings = completed.get('landed', 0)
-                        gen_stats['successful_landings'] += episode_landings
+                            # Initialize fitness if needed
+                            if not hasattr(genome, 'fitness') or genome.fitness is None:
+                                genome.fitness = 0
+                            
+                            # Set the fitness to the current total reward
+                            # This represents the accumulated reward over the full episode
+                            genome.fitness = reward
                     
                     if all(dones) or not self.env.is_running():
                         done = True
@@ -180,16 +168,16 @@ class LanderTrainer:
                 
             print()  # New line after step updates
         
-        print("\nGeneration max fitness calculation:")
-        
-        # Update generation statistics
+        # Calculate generation statistics
         for genome in genome_list:
-            if genome is not None:
+            if genome is not None and hasattr(genome, 'fitness') and genome.fitness is not None:
                 gen_stats['max_fitness'] = max(gen_stats['max_fitness'], genome.fitness)
                 gen_stats['total_fitness'] += genome.fitness
         
         # Calculate generation averages
-        gen_stats['avg_fitness'] = gen_stats['total_fitness'] / len(genome_list)
+        valid_genomes = [g for g in genome_list if g is not None and hasattr(g, 'fitness') and g.fitness is not None]
+        if valid_genomes:
+            gen_stats['avg_fitness'] = gen_stats['total_fitness'] / len(valid_genomes)
         
         # Store generation statistics
         self.generation_stats.append(gen_stats)
@@ -197,6 +185,11 @@ class LanderTrainer:
         # Update best fitness
         if gen_stats['max_fitness'] > self.best_fitness:
             self.best_fitness = gen_stats['max_fitness']
+            # Find best genome
+            for genome in genome_list:
+                if genome is not None and hasattr(genome, 'fitness') and genome.fitness == gen_stats['max_fitness']:
+                    self.best_genome = genome
+                    self.best_genome_id = genome.key
         
         # Print generation summary
         print(f"\nGeneration {self.generation} completed:")
@@ -236,7 +229,12 @@ class LanderTrainer:
                 self.logger.info("Creating new population")
                 self.population = neat.Population(config)
             
+            # Initialize best genome tracking
+            self.best_genome = None
+            self.best_genome_id = None
+            
             # Add reporters
+            self.population.add_reporter(neat.StdOutReporter(True))
             stats = neat.StatisticsReporter()
             self.population.add_reporter(stats)
             

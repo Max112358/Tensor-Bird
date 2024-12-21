@@ -1,0 +1,8 @@
+2024-12-19 19:32:26,637 - INFO - Initializing LanderTrainer
+2024-12-19 19:32:26,638 - ERROR - Error during trainer initialization: name 'random' is not defined
+Traceback (most recent call last):
+  File "C:\Users\maxjo\Documents\GitHub\Tensor-Bird\lunar_lander\trainer.py", line 26, in __init__
+    self.env = MultiLanderEnv(num_landers=num_landers, fast_mode=fast_mode)
+  File "C:\Users\maxjo\Documents\GitHub\Tensor-Bird\lunar_lander\environment.py", line 24, in __init__
+    random.seed(42)
+NameError: name 'random' is not defined

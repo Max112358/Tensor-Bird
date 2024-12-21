@@ -1,0 +1,329 @@
+2024-12-20 17:33:32,874 - INFO - Initializing LanderTrainer
+2024-12-20 17:33:32,875 - DEBUG - Environment initialized
+2024-12-20 17:33:32,875 - DEBUG - Input handler initialized
+2024-12-20 17:33:32,875 - INFO - NEAT library patched with genome logging
+2024-12-20 17:33:32,875 - INFO - LanderTrainer initialization complete
+2024-12-20 17:33:32,876 - INFO - Creating new population
+2024-12-20 17:33:33,200 - INFO - 
+Best Genome in Generation 0:
+2024-12-20 17:33:33,201 - INFO - Fitness: 4367.941150748951
+2024-12-20 17:33:33,201 - INFO - Network Structure:
+2024-12-20 17:33:33,201 - INFO - Nodes:
+2024-12-20 17:33:33,201 - INFO -   Node 0: DefaultNodeGene(key=0, bias=-1.1211822501777122, response=1.0264180400856862, activation=tanh, aggregation=sum)
+2024-12-20 17:33:33,201 - INFO -   Node 1: DefaultNodeGene(key=1, bias=-0.08803904639090733, response=0.9123891407504341, activation=tanh, aggregation=sum)
+2024-12-20 17:33:33,202 - INFO -   Node 2: DefaultNodeGene(key=2, bias=0.015585316990670473, response=-0.714539490281463, activation=tanh, aggregation=sum)
+2024-12-20 17:33:33,202 - INFO - Connections:
+2024-12-20 17:33:33,202 - INFO -   (-1, 0): weight=1.2374783010384778, enabled=True
+2024-12-20 17:33:33,202 - INFO -   (-1, 1): weight=0.9798088069979513, enabled=True
+2024-12-20 17:33:33,202 - INFO -   (-1, 2): weight=1.695710101288224, enabled=True
+2024-12-20 17:33:33,202 - INFO -   (-2, 0): weight=3.3743615497415256, enabled=True
+2024-12-20 17:33:33,202 - INFO -   (-2, 1): weight=-0.47845079045365224, enabled=True
+2024-12-20 17:33:33,202 - INFO -   (-2, 2): weight=-0.05421476464696725, enabled=True
+2024-12-20 17:33:33,202 - INFO -   (-3, 0): weight=0.014675347685009582, enabled=True
+2024-12-20 17:33:33,202 - INFO -   (-3, 1): weight=2.9132781760626845, enabled=True
+2024-12-20 17:33:33,202 - INFO -   (-3, 2): weight=-2.596829584102398, enabled=True
+2024-12-20 17:33:33,202 - INFO -   (-4, 0): weight=0.7286519553110974, enabled=True
+2024-12-20 17:33:33,203 - INFO -   (-4, 1): weight=-2.2062470511726575, enabled=True
+2024-12-20 17:33:33,203 - INFO -   (-4, 2): weight=-3.872356173184781, enabled=True
+2024-12-20 17:33:33,203 - INFO -   (-5, 0): weight=-3.0312491872319063, enabled=True
+2024-12-20 17:33:33,203 - INFO -   (-5, 1): weight=-2.0726528335625587, enabled=True
+2024-12-20 17:33:33,203 - INFO -   (-5, 2): weight=1.6035381591310518, enabled=True
+2024-12-20 17:33:33,203 - INFO - 
+New Best Genome Found!
+2024-12-20 17:33:33,203 - INFO - New Best Fitness: 4367.941150748951
+2024-12-20 17:33:33,479 - INFO - 
+Best Genome in Generation 1:
+2024-12-20 17:33:33,479 - INFO - Fitness: 3619.5270677544813
+2024-12-20 17:33:33,479 - INFO - Network Structure:
+2024-12-20 17:33:33,479 - INFO - Nodes:
+2024-12-20 17:33:33,479 - INFO -   Node 0: DefaultNodeGene(key=0, bias=-1.21156663018749, response=1.556864750406159, activation=tanh, aggregation=min)
+2024-12-20 17:33:33,479 - INFO -   Node 1: DefaultNodeGene(key=1, bias=0.15415008582331274, response=1.1437531561633247, activation=tanh, aggregation=mean)
+2024-12-20 17:33:33,479 - INFO -   Node 2: DefaultNodeGene(key=2, bias=-1.3820379652880472, response=-0.4242431805923042, activation=tanh, aggregation=max)
+2024-12-20 17:33:33,479 - INFO - Connections:
+2024-12-20 17:33:33,480 - INFO -   (-1, 0): weight=1.23728905468042, enabled=False
+2024-12-20 17:33:33,480 - INFO -   (-1, 1): weight=0.6845652516404961, enabled=True
+2024-12-20 17:33:33,480 - INFO -   (-1, 2): weight=1.7589623072066798, enabled=True
+2024-12-20 17:33:33,480 - INFO -   (-2, 0): weight=3.3743615497415256, enabled=True
+2024-12-20 17:33:33,482 - INFO -   (-2, 1): weight=0.23852017007053905, enabled=True
+2024-12-20 17:33:33,482 - INFO -   (-2, 2): weight=0.18680430532063014, enabled=True
+2024-12-20 17:33:33,482 - INFO -   (-3, 0): weight=0.14109920513569527, enabled=True
+2024-12-20 17:33:33,482 - INFO -   (-3, 1): weight=2.9132781760626845, enabled=True
+2024-12-20 17:33:33,482 - INFO -   (-3, 2): weight=-2.3825684388889363, enabled=True
+2024-12-20 17:33:33,482 - INFO -   (-4, 0): weight=0.5992753677494953, enabled=True
+2024-12-20 17:33:33,482 - INFO -   (-4, 1): weight=-2.8321545351638924, enabled=True
+2024-12-20 17:33:33,482 - INFO -   (-4, 2): weight=-5.576553988145395, enabled=True
+2024-12-20 17:33:33,482 - INFO -   (-5, 0): weight=-2.1193983492927493, enabled=True
+2024-12-20 17:33:33,482 - INFO -   (-5, 1): weight=-2.0726528335625587, enabled=True
+2024-12-20 17:33:33,482 - INFO -   (-5, 2): weight=1.5878520273896672, enabled=True
+2024-12-20 17:33:34,117 - INFO - 
+Best Genome in Generation 2:
+2024-12-20 17:33:34,119 - INFO - Fitness: 14048.630581791349
+2024-12-20 17:33:34,119 - INFO - Network Structure:
+2024-12-20 17:33:34,119 - INFO - Nodes:
+2024-12-20 17:33:34,119 - INFO -   Node 0: DefaultNodeGene(key=0, bias=-1.21156663018749, response=1.556864750406159, activation=tanh, aggregation=min)
+2024-12-20 17:33:34,119 - INFO -   Node 1: DefaultNodeGene(key=1, bias=0.15415008582331274, response=1.1437531561633247, activation=tanh, aggregation=mean)
+2024-12-20 17:33:34,119 - INFO -   Node 2: DefaultNodeGene(key=2, bias=-1.3820379652880472, response=-0.4242431805923042, activation=tanh, aggregation=max)
+2024-12-20 17:33:34,119 - INFO - Connections:
+2024-12-20 17:33:34,119 - INFO -   (-1, 0): weight=1.23728905468042, enabled=False
+2024-12-20 17:33:34,119 - INFO -   (-1, 1): weight=0.6845652516404961, enabled=True
+2024-12-20 17:33:34,119 - INFO -   (-1, 2): weight=1.7589623072066798, enabled=True
+2024-12-20 17:33:34,119 - INFO -   (-2, 0): weight=3.3743615497415256, enabled=True
+2024-12-20 17:33:34,119 - INFO -   (-2, 1): weight=0.23852017007053905, enabled=True
+2024-12-20 17:33:34,120 - INFO -   (-2, 2): weight=0.18680430532063014, enabled=True
+2024-12-20 17:33:34,120 - INFO -   (-3, 0): weight=0.14109920513569527, enabled=True
+2024-12-20 17:33:34,120 - INFO -   (-3, 1): weight=2.9132781760626845, enabled=True
+2024-12-20 17:33:34,120 - INFO -   (-3, 2): weight=-2.3825684388889363, enabled=True
+2024-12-20 17:33:34,120 - INFO -   (-4, 0): weight=0.5992753677494953, enabled=True
+2024-12-20 17:33:34,120 - INFO -   (-4, 1): weight=-2.8321545351638924, enabled=True
+2024-12-20 17:33:34,120 - INFO -   (-4, 2): weight=-5.576553988145395, enabled=True
+2024-12-20 17:33:34,120 - INFO -   (-5, 0): weight=-2.1193983492927493, enabled=True
+2024-12-20 17:33:34,120 - INFO -   (-5, 1): weight=-2.0726528335625587, enabled=True
+2024-12-20 17:33:34,120 - INFO -   (-5, 2): weight=1.5878520273896672, enabled=True
+2024-12-20 17:33:34,120 - INFO - 
+New Best Genome Found!
+2024-12-20 17:33:34,120 - INFO - New Best Fitness: 14048.630581791349
+2024-12-20 17:33:35,167 - INFO - 
+Best Genome in Generation 3:
+2024-12-20 17:33:35,169 - INFO - Fitness: 16466.100343610182
+2024-12-20 17:33:35,169 - INFO - Network Structure:
+2024-12-20 17:33:35,169 - INFO - Nodes:
+2024-12-20 17:33:35,169 - INFO -   Node 0: DefaultNodeGene(key=0, bias=-1.21156663018749, response=1.556864750406159, activation=tanh, aggregation=min)
+2024-12-20 17:33:35,169 - INFO -   Node 1: DefaultNodeGene(key=1, bias=0.15415008582331274, response=1.1437531561633247, activation=tanh, aggregation=mean)
+2024-12-20 17:33:35,170 - INFO -   Node 2: DefaultNodeGene(key=2, bias=-1.3820379652880472, response=-0.4242431805923042, activation=tanh, aggregation=max)
+2024-12-20 17:33:35,171 - INFO - Connections:
+2024-12-20 17:33:35,172 - INFO -   (-1, 0): weight=1.23728905468042, enabled=False
+2024-12-20 17:33:35,172 - INFO -   (-1, 1): weight=0.6845652516404961, enabled=True
+2024-12-20 17:33:35,172 - INFO -   (-1, 2): weight=1.7589623072066798, enabled=True
+2024-12-20 17:33:35,172 - INFO -   (-2, 0): weight=3.3743615497415256, enabled=True
+2024-12-20 17:33:35,172 - INFO -   (-2, 1): weight=0.23852017007053905, enabled=True
+2024-12-20 17:33:35,173 - INFO -   (-2, 2): weight=0.18680430532063014, enabled=True
+2024-12-20 17:33:35,173 - INFO -   (-3, 0): weight=0.14109920513569527, enabled=True
+2024-12-20 17:33:35,173 - INFO -   (-3, 1): weight=2.9132781760626845, enabled=True
+2024-12-20 17:33:35,173 - INFO -   (-3, 2): weight=-2.3825684388889363, enabled=True
+2024-12-20 17:33:35,173 - INFO -   (-4, 0): weight=0.5992753677494953, enabled=True
+2024-12-20 17:33:35,173 - INFO -   (-4, 1): weight=-2.8321545351638924, enabled=True
+2024-12-20 17:33:35,173 - INFO -   (-4, 2): weight=-5.576553988145395, enabled=True
+2024-12-20 17:33:35,173 - INFO -   (-5, 0): weight=-2.1193983492927493, enabled=True
+2024-12-20 17:33:35,173 - INFO -   (-5, 1): weight=-2.0726528335625587, enabled=True
+2024-12-20 17:33:35,174 - INFO -   (-5, 2): weight=1.5878520273896672, enabled=True
+2024-12-20 17:33:35,174 - INFO - 
+New Best Genome Found!
+2024-12-20 17:33:35,174 - INFO - New Best Fitness: 16466.100343610182
+2024-12-20 17:33:35,980 - INFO - 
+Best Genome in Generation 4:
+2024-12-20 17:33:35,980 - INFO - Fitness: 11614.083962938574
+2024-12-20 17:33:35,980 - INFO - Network Structure:
+2024-12-20 17:33:35,981 - INFO - Nodes:
+2024-12-20 17:33:35,981 - INFO -   Node 0: DefaultNodeGene(key=0, bias=-1.302540619448654, response=0.7725423407185814, activation=tanh, aggregation=sum)
+2024-12-20 17:33:35,981 - INFO -   Node 1: DefaultNodeGene(key=1, bias=-1.6639004949819078, response=1.610950478224745, activation=sin, aggregation=sum)
+2024-12-20 17:33:35,981 - INFO -   Node 2: DefaultNodeGene(key=2, bias=-0.9787623492618474, response=1.8882448166462535, activation=tanh, aggregation=sum)
+2024-12-20 17:33:35,981 - INFO - Connections:
+2024-12-20 17:33:35,981 - INFO -   (-1, 0): weight=-2.0593122882209007, enabled=False
+2024-12-20 17:33:35,981 - INFO -   (-1, 1): weight=3.670320885477283, enabled=True
+2024-12-20 17:33:35,981 - INFO -   (-1, 2): weight=0.9035679607506784, enabled=True
+2024-12-20 17:33:35,981 - INFO -   (-2, 0): weight=1.026077096628566, enabled=True
+2024-12-20 17:33:35,981 - INFO -   (-2, 1): weight=0.13138770492583293, enabled=True
+2024-12-20 17:33:35,982 - INFO -   (-2, 2): weight=0.31063866641987253, enabled=True
+2024-12-20 17:33:35,982 - INFO -   (-3, 0): weight=0.5876603247173514, enabled=True
+2024-12-20 17:33:35,982 - INFO -   (-3, 1): weight=1.0421640847405358, enabled=True
+2024-12-20 17:33:35,982 - INFO -   (-3, 2): weight=3.337232839374879, enabled=True
+2024-12-20 17:33:35,983 - INFO -   (-4, 0): weight=1.0113515189533104, enabled=True
+2024-12-20 17:33:35,983 - INFO -   (-4, 1): weight=-2.280201161448717, enabled=True
+2024-12-20 17:33:35,983 - INFO -   (-4, 2): weight=1.722142901034291, enabled=True
+2024-12-20 17:33:35,983 - INFO -   (-5, 0): weight=0.7866655313695574, enabled=True
+2024-12-20 17:33:35,983 - INFO -   (-5, 1): weight=-1.019095144712219, enabled=True
+2024-12-20 17:33:35,983 - INFO -   (-5, 2): weight=0.641923194342499, enabled=True
+2024-12-20 17:33:36,265 - INFO - 
+Best Genome in Generation 5:
+2024-12-20 17:33:36,265 - INFO - Fitness: 3203.544712303649
+2024-12-20 17:33:36,265 - INFO - Network Structure:
+2024-12-20 17:33:36,265 - INFO - Nodes:
+2024-12-20 17:33:36,265 - INFO -   Node 0: DefaultNodeGene(key=0, bias=-1.302540619448654, response=0.7393385963767256, activation=cube, aggregation=sum)
+2024-12-20 17:33:36,265 - INFO -   Node 1: DefaultNodeGene(key=1, bias=-1.7609094166763615, response=0.963368191110564, activation=sin, aggregation=sum)
+2024-12-20 17:33:36,266 - INFO -   Node 2: DefaultNodeGene(key=2, bias=-1.1931832654622467, response=2.4830848682648514, activation=tanh, aggregation=sum)
+2024-12-20 17:33:36,266 - INFO - Connections:
+2024-12-20 17:33:36,266 - INFO -   (-1, 0): weight=-2.6797820371271066, enabled=False
+2024-12-20 17:33:36,266 - INFO -   (-1, 1): weight=3.0415374301320357, enabled=True
+2024-12-20 17:33:36,266 - INFO -   (-1, 2): weight=1.2021114257948806, enabled=True
+2024-12-20 17:33:36,266 - INFO -   (-2, 0): weight=1.067259460582253, enabled=True
+2024-12-20 17:33:36,266 - INFO -   (-2, 1): weight=0.5535582270076769, enabled=True
+2024-12-20 17:33:36,266 - INFO -   (-2, 2): weight=-0.20100878810494655, enabled=True
+2024-12-20 17:33:36,266 - INFO -   (-3, 0): weight=1.2922616957325408, enabled=True
+2024-12-20 17:33:36,266 - INFO -   (-3, 1): weight=1.0421640847405358, enabled=True
+2024-12-20 17:33:36,266 - INFO -   (-3, 2): weight=3.372121863532942, enabled=True
+2024-12-20 17:33:36,266 - INFO -   (-4, 0): weight=0.8648553353905448, enabled=True
+2024-12-20 17:33:36,266 - INFO -   (-4, 1): weight=-1.7209492053774729, enabled=True
+2024-12-20 17:33:36,267 - INFO -   (-4, 2): weight=1.9574998328856679, enabled=True
+2024-12-20 17:33:36,267 - INFO -   (-5, 0): weight=0.2582468950743302, enabled=True
+2024-12-20 17:33:36,267 - INFO -   (-5, 1): weight=-0.04529915463905465, enabled=True
+2024-12-20 17:33:36,267 - INFO -   (-5, 2): weight=1.0525459788963132, enabled=True
+2024-12-20 17:33:36,793 - INFO - 
+Best Genome in Generation 6:
+2024-12-20 17:33:36,793 - INFO - Fitness: 2354.1304622858597
+2024-12-20 17:33:36,793 - INFO - Network Structure:
+2024-12-20 17:33:36,794 - INFO - Nodes:
+2024-12-20 17:33:36,794 - INFO -   Node 0: DefaultNodeGene(key=0, bias=-0.8769039286132287, response=1.5226621246041523, activation=tanh, aggregation=mean)
+2024-12-20 17:33:36,794 - INFO -   Node 1: DefaultNodeGene(key=1, bias=-1.4134894801104831, response=-0.03752635406973914, activation=tanh, aggregation=min)
+2024-12-20 17:33:36,794 - INFO -   Node 2: DefaultNodeGene(key=2, bias=-1.9808334310354283, response=-1.0920341532239919, activation=tanh, aggregation=product)
+2024-12-20 17:33:36,794 - INFO - Connections:
+2024-12-20 17:33:36,794 - INFO -   (-1, 0): weight=-1.3461806419026852, enabled=True
+2024-12-20 17:33:36,794 - INFO -   (-1, 1): weight=0.48546357056666345, enabled=True
+2024-12-20 17:33:36,795 - INFO -   (-1, 2): weight=1.035106317400738, enabled=True
+2024-12-20 17:33:36,795 - INFO -   (-2, 0): weight=-4.156719645827408, enabled=False
+2024-12-20 17:33:36,795 - INFO -   (-2, 1): weight=-0.29346046775026813, enabled=True
+2024-12-20 17:33:36,795 - INFO -   (-2, 2): weight=0.40349610949540715, enabled=True
+2024-12-20 17:33:36,795 - INFO -   (-3, 0): weight=-0.0031853504579227587, enabled=True
+2024-12-20 17:33:36,795 - INFO -   (-3, 1): weight=3.0357970708185738, enabled=True
+2024-12-20 17:33:36,796 - INFO -   (-3, 2): weight=-1.6751481358342821, enabled=True
+2024-12-20 17:33:36,796 - INFO -   (-4, 0): weight=-2.8004106282485615, enabled=True
+2024-12-20 17:33:36,796 - INFO -   (-4, 1): weight=-1.3102419991259273, enabled=True
+2024-12-20 17:33:36,797 - INFO -   (-4, 2): weight=-5.164547477647804, enabled=True
+2024-12-20 17:33:36,797 - INFO -   (-5, 0): weight=-2.7179782849756204, enabled=False
+2024-12-20 17:33:36,797 - INFO -   (-5, 1): weight=-2.3700632528392176, enabled=True
+2024-12-20 17:33:36,797 - INFO -   (-5, 2): weight=2.148939973033123, enabled=True
+2024-12-20 17:33:37,335 - INFO - 
+Best Genome in Generation 7:
+2024-12-20 17:33:37,335 - INFO - Fitness: 3058.343950900807
+2024-12-20 17:33:37,335 - INFO - Network Structure:
+2024-12-20 17:33:37,335 - INFO - Nodes:
+2024-12-20 17:33:37,336 - INFO -   Node 0: DefaultNodeGene(key=0, bias=-1.302540619448654, response=0.7393385963767256, activation=cube, aggregation=sum)
+2024-12-20 17:33:37,336 - INFO -   Node 1: DefaultNodeGene(key=1, bias=-1.7609094166763615, response=0.963368191110564, activation=sin, aggregation=sum)
+2024-12-20 17:33:37,336 - INFO -   Node 2: DefaultNodeGene(key=2, bias=-1.1931832654622467, response=2.4830848682648514, activation=tanh, aggregation=sum)
+2024-12-20 17:33:37,336 - INFO - Connections:
+2024-12-20 17:33:37,336 - INFO -   (-1, 0): weight=-2.6797820371271066, enabled=False
+2024-12-20 17:33:37,336 - INFO -   (-1, 1): weight=3.0415374301320357, enabled=True
+2024-12-20 17:33:37,336 - INFO -   (-1, 2): weight=1.2021114257948806, enabled=True
+2024-12-20 17:33:37,336 - INFO -   (-2, 0): weight=1.067259460582253, enabled=True
+2024-12-20 17:33:37,336 - INFO -   (-2, 1): weight=0.5535582270076769, enabled=True
+2024-12-20 17:33:37,336 - INFO -   (-2, 2): weight=-0.20100878810494655, enabled=True
+2024-12-20 17:33:37,336 - INFO -   (-3, 0): weight=1.2922616957325408, enabled=True
+2024-12-20 17:33:37,336 - INFO -   (-3, 1): weight=1.0421640847405358, enabled=True
+2024-12-20 17:33:37,337 - INFO -   (-3, 2): weight=3.372121863532942, enabled=True
+2024-12-20 17:33:37,337 - INFO -   (-4, 0): weight=0.8648553353905448, enabled=True
+2024-12-20 17:33:37,337 - INFO -   (-4, 1): weight=-1.7209492053774729, enabled=True
+2024-12-20 17:33:37,338 - INFO -   (-4, 2): weight=1.9574998328856679, enabled=True
+2024-12-20 17:33:37,338 - INFO -   (-5, 0): weight=0.2582468950743302, enabled=True
+2024-12-20 17:33:37,338 - INFO -   (-5, 1): weight=-0.04529915463905465, enabled=True
+2024-12-20 17:33:37,338 - INFO -   (-5, 2): weight=1.0525459788963132, enabled=True
+2024-12-20 17:33:37,914 - INFO - 
+Best Genome in Generation 8:
+2024-12-20 17:33:37,914 - INFO - Fitness: 3707.361141416618
+2024-12-20 17:33:37,914 - INFO - Network Structure:
+2024-12-20 17:33:37,914 - INFO - Nodes:
+2024-12-20 17:33:37,914 - INFO -   Node 0: DefaultNodeGene(key=0, bias=3.4783840747384147, response=-1.3862604192317645, activation=tanh, aggregation=sum)
+2024-12-20 17:33:37,915 - INFO -   Node 1: DefaultNodeGene(key=1, bias=-0.6807737192456638, response=1.6517742948997909, activation=tanh, aggregation=mean)
+2024-12-20 17:33:37,915 - INFO -   Node 2: DefaultNodeGene(key=2, bias=0.12616021435929903, response=2.154396360473183, activation=tanh, aggregation=sum)
+2024-12-20 17:33:37,915 - INFO - Connections:
+2024-12-20 17:33:37,915 - INFO -   (-1, 0): weight=-0.07488952282829994, enabled=True
+2024-12-20 17:33:37,915 - INFO -   (-1, 1): weight=3.5765017658334237, enabled=True
+2024-12-20 17:33:37,915 - INFO -   (-1, 2): weight=-0.13410199410026769, enabled=True
+2024-12-20 17:33:37,915 - INFO -   (-2, 0): weight=0.7003021428302743, enabled=False
+2024-12-20 17:33:37,915 - INFO -   (-2, 1): weight=-0.322304381742625, enabled=True
+2024-12-20 17:33:37,915 - INFO -   (-2, 2): weight=-1.9988202330389802, enabled=True
+2024-12-20 17:33:37,915 - INFO -   (-3, 0): weight=-2.33986650653956, enabled=True
+2024-12-20 17:33:37,915 - INFO -   (-3, 1): weight=-1.0598603138451215, enabled=True
+2024-12-20 17:33:37,915 - INFO -   (-3, 2): weight=0.2068131726459801, enabled=True
+2024-12-20 17:33:37,916 - INFO -   (-4, 0): weight=-2.2232982735111215, enabled=True
+2024-12-20 17:33:37,916 - INFO -   (-4, 1): weight=-0.07961520452196522, enabled=False
+2024-12-20 17:33:37,917 - INFO -   (-4, 2): weight=-1.291838814754474, enabled=True
+2024-12-20 17:33:37,917 - INFO -   (-5, 0): weight=2.1308506123651196, enabled=True
+2024-12-20 17:33:37,917 - INFO -   (-5, 1): weight=-0.6939537112331884, enabled=True
+2024-12-20 17:33:37,917 - INFO -   (-5, 2): weight=0.26408038242937437, enabled=True
+2024-12-20 17:33:38,548 - INFO - 
+Best Genome in Generation 9:
+2024-12-20 17:33:38,548 - INFO - Fitness: 4094.3696472782394
+2024-12-20 17:33:38,548 - INFO - Network Structure:
+2024-12-20 17:33:38,548 - INFO - Nodes:
+2024-12-20 17:33:38,548 - INFO -   Node 0: DefaultNodeGene(key=0, bias=3.4783840747384147, response=-1.3862604192317645, activation=tanh, aggregation=sum)
+2024-12-20 17:33:38,548 - INFO -   Node 1: DefaultNodeGene(key=1, bias=-0.6807737192456638, response=1.6517742948997909, activation=tanh, aggregation=mean)
+2024-12-20 17:33:38,548 - INFO -   Node 2: DefaultNodeGene(key=2, bias=0.12616021435929903, response=2.154396360473183, activation=tanh, aggregation=sum)
+2024-12-20 17:33:38,548 - INFO - Connections:
+2024-12-20 17:33:38,548 - INFO -   (-1, 0): weight=-0.07488952282829994, enabled=True
+2024-12-20 17:33:38,549 - INFO -   (-1, 1): weight=3.5765017658334237, enabled=True
+2024-12-20 17:33:38,549 - INFO -   (-1, 2): weight=-0.13410199410026769, enabled=True
+2024-12-20 17:33:38,549 - INFO -   (-2, 0): weight=0.7003021428302743, enabled=False
+2024-12-20 17:33:38,549 - INFO -   (-2, 1): weight=-0.322304381742625, enabled=True
+2024-12-20 17:33:38,549 - INFO -   (-2, 2): weight=-1.9988202330389802, enabled=True
+2024-12-20 17:33:38,549 - INFO -   (-3, 0): weight=-2.33986650653956, enabled=True
+2024-12-20 17:33:38,549 - INFO -   (-3, 1): weight=-1.0598603138451215, enabled=True
+2024-12-20 17:33:38,549 - INFO -   (-3, 2): weight=0.2068131726459801, enabled=True
+2024-12-20 17:33:38,549 - INFO -   (-4, 0): weight=-2.2232982735111215, enabled=True
+2024-12-20 17:33:38,549 - INFO -   (-4, 1): weight=-0.07961520452196522, enabled=False
+2024-12-20 17:33:38,550 - INFO -   (-4, 2): weight=-1.291838814754474, enabled=True
+2024-12-20 17:33:38,550 - INFO -   (-5, 0): weight=2.1308506123651196, enabled=True
+2024-12-20 17:33:38,550 - INFO -   (-5, 1): weight=-0.6939537112331884, enabled=True
+2024-12-20 17:33:38,550 - INFO -   (-5, 2): weight=0.26408038242937437, enabled=True
+2024-12-20 17:33:39,103 - INFO - 
+Best Genome in Generation 10:
+2024-12-20 17:33:39,103 - INFO - Fitness: 3644.6250459807516
+2024-12-20 17:33:39,103 - INFO - Network Structure:
+2024-12-20 17:33:39,103 - INFO - Nodes:
+2024-12-20 17:33:39,103 - INFO -   Node 0: DefaultNodeGene(key=0, bias=-0.5176547822563449, response=1.9971161479015627, activation=tanh, aggregation=mean)
+2024-12-20 17:33:39,103 - INFO -   Node 1: DefaultNodeGene(key=1, bias=-1.377448518110884, response=1.0464041010412624, activation=tanh, aggregation=min)
+2024-12-20 17:33:39,103 - INFO -   Node 2: DefaultNodeGene(key=2, bias=-2.768313297303715, response=-1.9139652812888082, activation=tanh, aggregation=product)
+2024-12-20 17:33:39,104 - INFO - Connections:
+2024-12-20 17:33:39,104 - INFO -   (-1, 0): weight=-0.575440405092073, enabled=True
+2024-12-20 17:33:39,104 - INFO -   (-1, 1): weight=1.0727013664247553, enabled=True
+2024-12-20 17:33:39,104 - INFO -   (-1, 2): weight=0.5466728052627639, enabled=True
+2024-12-20 17:33:39,104 - INFO -   (-2, 0): weight=-3.6128716463590766, enabled=False
+2024-12-20 17:33:39,104 - INFO -   (-2, 1): weight=-0.6641193558664263, enabled=True
+2024-12-20 17:33:39,104 - INFO -   (-2, 2): weight=1.0774644570246537, enabled=True
+2024-12-20 17:33:39,104 - INFO -   (-3, 0): weight=-0.42262413605125704, enabled=True
+2024-12-20 17:33:39,104 - INFO -   (-3, 1): weight=3.674831084083148, enabled=True
+2024-12-20 17:33:39,104 - INFO -   (-3, 2): weight=-1.4074117817951595, enabled=True
+2024-12-20 17:33:39,104 - INFO -   (-4, 0): weight=-2.739247821825451, enabled=True
+2024-12-20 17:33:39,105 - INFO -   (-4, 1): weight=-1.4067287213351054, enabled=True
+2024-12-20 17:33:39,105 - INFO -   (-4, 2): weight=-5.5814523484675, enabled=True
+2024-12-20 17:33:39,106 - INFO -   (-5, 0): weight=-2.852245430105433, enabled=False
+2024-12-20 17:33:39,106 - INFO -   (-5, 1): weight=-2.6266780805505228, enabled=True
+2024-12-20 17:33:39,106 - INFO -   (-5, 2): weight=-0.04950710303269221, enabled=True
+2024-12-20 17:33:39,391 - INFO - 
+Best Genome in Generation 11:
+2024-12-20 17:33:39,391 - INFO - Fitness: 3014.390363970562
+2024-12-20 17:33:39,391 - INFO - Network Structure:
+2024-12-20 17:33:39,391 - INFO - Nodes:
+2024-12-20 17:33:39,391 - INFO -   Node 0: DefaultNodeGene(key=0, bias=-0.49337788133916505, response=1.9971161479015627, activation=sin, aggregation=mean)
+2024-12-20 17:33:39,391 - INFO -   Node 1: DefaultNodeGene(key=1, bias=-1.3608403884592841, response=1.0464041010412624, activation=tanh, aggregation=min)
+2024-12-20 17:33:39,391 - INFO -   Node 2: DefaultNodeGene(key=2, bias=-2.768313297303715, response=-2.143657548085329, activation=sin, aggregation=median)
+2024-12-20 17:33:39,391 - INFO - Connections:
+2024-12-20 17:33:39,391 - INFO -   (-1, 0): weight=0.08424067591469553, enabled=True
+2024-12-20 17:33:39,391 - INFO -   (-1, 1): weight=1.0727013664247553, enabled=False
+2024-12-20 17:33:39,392 - INFO -   (-1, 2): weight=0.4640875014949234, enabled=True
+2024-12-20 17:33:39,392 - INFO -   (-2, 0): weight=-3.1369239197157985, enabled=False
+2024-12-20 17:33:39,392 - INFO -   (-2, 1): weight=-0.4630090465568999, enabled=True
+2024-12-20 17:33:39,392 - INFO -   (-2, 2): weight=2.0257747260563512, enabled=False
+2024-12-20 17:33:39,392 - INFO -   (-3, 0): weight=-0.4847386791750703, enabled=True
+2024-12-20 17:33:39,392 - INFO -   (-3, 1): weight=3.036282192611417, enabled=True
+2024-12-20 17:33:39,392 - INFO -   (-3, 2): weight=1.3274509882741148, enabled=True
+2024-12-20 17:33:39,392 - INFO -   (-4, 0): weight=-2.556844833635917, enabled=True
+2024-12-20 17:33:39,392 - INFO -   (-4, 1): weight=-1.6670763275260254, enabled=True
+2024-12-20 17:33:39,392 - INFO -   (-4, 2): weight=-5.254436285400355, enabled=True
+2024-12-20 17:33:39,392 - INFO -   (-5, 0): weight=-2.642591531274915, enabled=False
+2024-12-20 17:33:39,392 - INFO -   (-5, 1): weight=-2.8387368152173957, enabled=True
+2024-12-20 17:33:39,393 - INFO -   (-5, 2): weight=0.19909855702422707, enabled=False
+2024-12-20 17:33:39,684 - INFO - 
+Best Genome in Generation 12:
+2024-12-20 17:33:39,684 - INFO - Fitness: 3440.314607558367
+2024-12-20 17:33:39,685 - INFO - Network Structure:
+2024-12-20 17:33:39,685 - INFO - Nodes:
+2024-12-20 17:33:39,685 - INFO -   Node 0: DefaultNodeGene(key=0, bias=3.4783840747384147, response=-1.3862604192317645, activation=tanh, aggregation=sum)
+2024-12-20 17:33:39,685 - INFO -   Node 1: DefaultNodeGene(key=1, bias=-0.6807737192456638, response=1.6517742948997909, activation=tanh, aggregation=mean)
+2024-12-20 17:33:39,685 - INFO -   Node 2: DefaultNodeGene(key=2, bias=0.12616021435929903, response=2.154396360473183, activation=tanh, aggregation=sum)
+2024-12-20 17:33:39,685 - INFO - Connections:
+2024-12-20 17:33:39,685 - INFO -   (-1, 0): weight=-0.07488952282829994, enabled=True
+2024-12-20 17:33:39,685 - INFO -   (-1, 1): weight=3.5765017658334237, enabled=True
+2024-12-20 17:33:39,685 - INFO -   (-1, 2): weight=-0.13410199410026769, enabled=True
+2024-12-20 17:33:39,685 - INFO -   (-2, 0): weight=0.7003021428302743, enabled=False
+2024-12-20 17:33:39,685 - INFO -   (-2, 1): weight=-0.322304381742625, enabled=True
+2024-12-20 17:33:39,685 - INFO -   (-2, 2): weight=-1.9988202330389802, enabled=True
+2024-12-20 17:33:39,685 - INFO -   (-3, 0): weight=-2.33986650653956, enabled=True
+2024-12-20 17:33:39,686 - INFO -   (-3, 1): weight=-1.0598603138451215, enabled=True
+2024-12-20 17:33:39,686 - INFO -   (-3, 2): weight=0.2068131726459801, enabled=True
+2024-12-20 17:33:39,686 - INFO -   (-4, 0): weight=-2.2232982735111215, enabled=True
+2024-12-20 17:33:39,686 - INFO -   (-4, 1): weight=-0.07961520452196522, enabled=False
+2024-12-20 17:33:39,686 - INFO -   (-4, 2): weight=-1.291838814754474, enabled=True
+2024-12-20 17:33:39,686 - INFO -   (-5, 0): weight=2.1308506123651196, enabled=True
+2024-12-20 17:33:39,686 - INFO -   (-5, 1): weight=-0.6939537112331884, enabled=True
+2024-12-20 17:33:39,686 - INFO -   (-5, 2): weight=0.26408038242937437, enabled=True
+2024-12-20 17:33:39,837 - INFO - 
+Training interrupted by user

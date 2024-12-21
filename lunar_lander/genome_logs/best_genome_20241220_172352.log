@@ -1,0 +1,35 @@
+2024-12-20 17:23:52,786 - INFO - Initializing LanderTrainer
+2024-12-20 17:23:52,822 - DEBUG - Environment initialized
+2024-12-20 17:23:52,823 - DEBUG - Input handler initialized
+2024-12-20 17:23:52,823 - INFO - NEAT library patched with genome logging
+2024-12-20 17:23:52,823 - INFO - LanderTrainer initialization complete
+2024-12-20 17:23:52,825 - INFO - Creating new population
+2024-12-20 17:24:01,667 - INFO - 
+Best Genome in Generation 0:
+2024-12-20 17:24:01,667 - INFO - Fitness: 4199.263262032258
+2024-12-20 17:24:01,667 - INFO - Network Structure:
+2024-12-20 17:24:01,667 - INFO - Nodes:
+2024-12-20 17:24:01,676 - INFO -   Node 0: DefaultNodeGene(key=0, bias=0.03962706012852929, response=0.9413073024060618, activation=tanh, aggregation=sum)
+2024-12-20 17:24:01,676 - INFO -   Node 1: DefaultNodeGene(key=1, bias=-0.1314162888743488, response=1.0103902113271137, activation=tanh, aggregation=sum)
+2024-12-20 17:24:01,676 - INFO -   Node 2: DefaultNodeGene(key=2, bias=-2.5718092354221946, response=1.824985534025652, activation=tanh, aggregation=sum)
+2024-12-20 17:24:01,676 - INFO - Connections:
+2024-12-20 17:24:01,677 - INFO -   (-1, 0): weight=0.9798088069979513, enabled=True
+2024-12-20 17:24:01,677 - INFO -   (-1, 1): weight=1.695710101288224, enabled=True
+2024-12-20 17:24:01,677 - INFO -   (-1, 2): weight=3.3743615497415256, enabled=True
+2024-12-20 17:24:01,677 - INFO -   (-2, 0): weight=-0.47845079045365224, enabled=True
+2024-12-20 17:24:01,677 - INFO -   (-2, 1): weight=-0.05421476464696725, enabled=True
+2024-12-20 17:24:01,677 - INFO -   (-2, 2): weight=0.014675347685009582, enabled=True
+2024-12-20 17:24:01,677 - INFO -   (-3, 0): weight=2.9132781760626845, enabled=True
+2024-12-20 17:24:01,677 - INFO -   (-3, 1): weight=-2.596829584102398, enabled=True
+2024-12-20 17:24:01,677 - INFO -   (-3, 2): weight=0.7286519553110974, enabled=True
+2024-12-20 17:24:01,678 - INFO -   (-4, 0): weight=-2.2062470511726575, enabled=True
+2024-12-20 17:24:01,678 - INFO -   (-4, 1): weight=-3.872356173184781, enabled=True
+2024-12-20 17:24:01,678 - INFO -   (-4, 2): weight=-3.0312491872319063, enabled=True
+2024-12-20 17:24:01,678 - INFO -   (-5, 0): weight=-2.0726528335625587, enabled=True
+2024-12-20 17:24:01,678 - INFO -   (-5, 1): weight=1.6035381591310518, enabled=True
+2024-12-20 17:24:01,678 - INFO -   (-5, 2): weight=-1.302540619448654, enabled=True
+2024-12-20 17:24:01,678 - INFO - 
+New Best Genome Found!
+2024-12-20 17:24:01,678 - INFO - New Best Fitness: 4199.263262032258
+2024-12-20 17:24:03,589 - INFO - 
+Training interrupted by user

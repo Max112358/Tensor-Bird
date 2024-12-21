@@ -14,7 +14,7 @@ class Renderer:
         pygame.display.set_caption("Multi Lunar Lander")
         
         # Initialize font for lander numbers
-        self.number_font = pygame.font.Font(None, 36)  # Added font for numbers
+        self.number_font = pygame.font.Font(None, 36)
         
         # Configure window for background rendering while maintaining taskbar visibility
         info = pygame.display.get_wm_info()
@@ -23,11 +23,9 @@ class Renderer:
                 import ctypes
                 if hasattr(ctypes, 'windll'):  # Windows specific
                     hwnd = info['window']
-                    # Set window style to allow background rendering while keeping taskbar visibility
                     GWL_EXSTYLE = -20
                     WS_EX_APPWINDOW = 0x40000
                     WS_EX_COMPOSITED = 0x02000000
-                    # Combine flags to get both behaviors
                     style = WS_EX_APPWINDOW | WS_EX_COMPOSITED
                     ctypes.windll.user32.SetWindowLongW(hwnd, GWL_EXSTYLE, style)
             except Exception:
@@ -42,6 +40,17 @@ class Renderer:
         self.RED = (255, 0, 0)
         self.BLUE = (0, 0, 255)
         self.BLACK = (0, 0, 0)
+        self.GREEN = (0, 255, 0)
+        
+    def _get_lander_color(self, lander: Lander) -> tuple:
+        """Determine lander color based on its state"""
+        if not lander.active:
+            if lander.terminate_reason == 'landed':
+                return self.GREEN  # Successfully landed
+            return self.BLUE  # Other terminated states (crashed/out of bounds/out of fuel)
+        elif any(lander.thrusters.values()):
+            return self.RED  # Thrusters firing
+        return self.WHITE  # Active but drifting
         
     def render(self, landers: list[Lander], terrain: Terrain) -> bool:
         """Returns False if the window should close, True otherwise"""
@@ -76,7 +85,8 @@ class Renderer:
         
         # Draw landers with appropriate colors and number labels
         for i, lander in enumerate(landers):
-            color = lander.get_color()
+            # Get color based on lander state
+            color = self._get_lander_color(lander)
             
             # Draw main body
             pygame.draw.polygon(self.screen, color, lander.get_vertices())

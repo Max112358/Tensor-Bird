@@ -1,0 +1,15 @@
+2024-12-20 16:35:02,494 - INFO - Initializing LanderTrainer
+2024-12-20 16:35:02,495 - DEBUG - Environment initialized
+2024-12-20 16:35:02,495 - DEBUG - Input handler initialized
+2024-12-20 16:35:02,495 - INFO - NEAT library patched with genome logging
+2024-12-20 16:35:02,495 - INFO - LanderTrainer initialization complete
+2024-12-20 16:35:02,496 - INFO - Creating new population
+2024-12-20 16:35:02,500 - ERROR - Training stopped due to error: '>' not supported between instances of 'NoneType' and 'NoneType'
+Traceback (most recent call last):
+  File "C:\Users\maxjo\Documents\GitHub\Tensor-Bird\lunar_lander\trainer.py", line 250, in run
+    winner = self.population.run(self.eval_genomes, remaining_generations)
+  File "C:\Users\maxjo\Documents\GitHub\Tensor-Bird\lunar_lander\best_genome_logger.py", line 83, in eval_genomes_wrapper
+    return original_eval_genomes(self, wrapped_fitness, n)
+  File "C:\Users\maxjo\AppData\Local\Programs\Python\Python39\lib\site-packages\neat\population.py", line 94, in run
+    if best is None or g.fitness > best.fitness:
+TypeError: '>' not supported between instances of 'NoneType' and 'NoneType'

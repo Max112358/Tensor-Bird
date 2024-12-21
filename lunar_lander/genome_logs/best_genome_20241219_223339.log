@@ -1,0 +1,10 @@
+2024-12-19 22:33:39,499 - INFO - Initializing LanderTrainer
+2024-12-19 22:33:39,500 - ERROR - Error during trainer initialization: name 'RewardTracker' is not defined
+Traceback (most recent call last):
+  File "C:\Users\maxjo\Documents\GitHub\Tensor-Bird\lunar_lander\trainer.py", line 26, in __init__
+    self.env = MultiLanderEnv(num_landers=num_landers, fast_mode=fast_mode)
+  File "C:\Users\maxjo\Documents\GitHub\Tensor-Bird\lunar_lander\environment.py", line 34, in __init__
+    self.reward_trackers = [RewardTracker() for _ in range(num_landers)]
+  File "C:\Users\maxjo\Documents\GitHub\Tensor-Bird\lunar_lander\environment.py", line 34, in <listcomp>
+    self.reward_trackers = [RewardTracker() for _ in range(num_landers)]
+NameError: name 'RewardTracker' is not defined

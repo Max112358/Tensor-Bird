@@ -16,11 +16,16 @@ class Terrain:
         # Store points for line segments to enable proper collision detection
         self.segments = []
         
+        # Set a fixed seed for reproducibility
+        # this is for debugging only
+        #np.random.seed(42)
+        #random.seed(42)
+        
         # Generate initial terrain
         self.points = self._generate()
         self._generate_segments()
 
-    '''
+    
     def _generate(self) -> List[Tuple[int, int]]:
         """Generate terrain with random height variations and flat landing pad"""
         const = get_constants()
@@ -55,7 +60,10 @@ class Terrain:
             x += segment_width
             
         return points
+    
+    
     '''
+    #non random version for debugging
     def _generate(self) -> List[Tuple[int, int]]:
         """Generate terrain with fixed height variations and flat landing pad"""
         points = []
@@ -87,7 +95,7 @@ class Terrain:
             x += segment_width
             
         return points
-
+    '''
 
     def _generate_segments(self):
         """Create line segments from points for collision detection"""
@@ -162,6 +170,6 @@ class Terrain:
         if not hasattr(self, '_landing_pad_x'):
             pad_min = int(self.width * 0.2)
             pad_max = int(self.width * 0.8)
-            #self._landing_pad_x = random.randint(pad_min, pad_max)
-            self._landing_pad_x = pad_max
+            self._landing_pad_x = random.randint(pad_min, pad_max)
+            #self._landing_pad_x = pad_max #non random version for debugging
         return self._landing_pad_x

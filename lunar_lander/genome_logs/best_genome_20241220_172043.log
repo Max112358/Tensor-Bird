@@ -1,0 +1,9 @@
+2024-12-20 17:20:43,489 - INFO - Initializing LanderTrainer
+2024-12-20 17:20:43,540 - DEBUG - Environment initialized
+2024-12-20 17:20:43,540 - DEBUG - Input handler initialized
+2024-12-20 17:20:43,541 - INFO - NEAT library patched with genome logging
+2024-12-20 17:20:43,541 - INFO - LanderTrainer initialization complete
+2024-12-20 17:20:43,542 - INFO - Restoring from checkpoint: checkpoints/neat-checkpoint-249
+2024-12-20 17:20:43,551 - INFO - Restored to generation 249
+2024-12-20 17:20:46,642 - INFO - 
+Training interrupted by user
