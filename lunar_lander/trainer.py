@@ -14,14 +14,13 @@ from best_genome_logger import BestGenomeLogger
 
 class LanderTrainer:
     winning_genomes = []
-    lander_landed_last_round = False
 
     def __init__(self, num_landers: int = 20, checkpoint_interval: int = 5, fast_mode: bool = False):
         """
         Initialize the trainer with genome logging
         """
         # Initialize genome logger first
-        const = get_constants()
+        self.const = get_constants()
         self.genome_logger = BestGenomeLogger()
         self.logger = self.genome_logger.logger
         self.logger.info("Initializing LanderTrainer")
@@ -82,11 +81,17 @@ class LanderTrainer:
             networks.append(net)
             genome_list.append(genome)
             
-            if not self.lander_landed_last_round:
-                if self.winning_genomes:
-                    genome_list.append(self.winning_genomes[-1])
-
-            self.lander_landed_last_round = False
+            
+            # Inject winner back in if not present
+            if self.winning_genomes:
+                # Process each winning genome
+                for genome in self.winning_genomes[:]:  # Create a copy to iterate
+                    if getattr(genome, 'injection_count', 0) >= 100:
+                        self.winning_genomes.remove(genome)
+                    else:
+                        genome.injection_count = getattr(genome, 'injection_count', 0) + 1
+                        genome_list.append(genome)
+            
 
 
 
@@ -170,10 +175,16 @@ class LanderTrainer:
                             # Set the fitness to the current total reward
                             # This represents the accumulated reward over the full episode
                             genome.fitness = reward
+                            
+                            
                             if genome.fitness > self.const.LANDING_REWARD:
                                 episode_landings += 1
-                                self.winning_genomes.append(genome)
-                                self.lander_landed_last_round = True
+                                # Only add if it's not already been injected
+                                if not hasattr(genome, 'injection_count'):
+                                    self.winning_genomes.append(genome)
+                                    genome.injection_count = 0
+                                
+                            
                     
                     if all(dones) or not self.env.is_running():
                         done = True
