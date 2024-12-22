@@ -30,15 +30,20 @@ class GameConstants:
     INITIAL_FUEL: float = 200.0
     MAIN_ENGINE_FUEL_COST: float = 1.0
     SIDE_ENGINE_FUEL_COST: float = 0.5
+
+    # Game settings config
+    ANGLE_NORMALIZATION: float = 3.14159
+    FPS: int = 60
+    DT: float = 1.0 / 60
+
+    #AI rewards
     LANDING_REWARD: float = 10000000.0
     CRASH_PENALTY: float = -100.0
     OUT_OF_BOUNDS_PENALTY: float = -1000.0
     OUT_OF_FUEL_PENALTY: float = -100.0
     STAYING_ALIVE_REWARD_PER_FRAME: float = 10.0
     SAFETY_VIOLATION_PENALTY: float = -10000.0
-    ANGLE_NORMALIZATION: float = 3.14159
-    FPS: int = 60
-    DT: float = 1.0 / 60
+    
 
 def initialize_game(width: int, height: int) -> GameConstants:
     """Initialize pygame and create scaled game constants"""

@@ -3,6 +3,7 @@ import numpy as np
 from environment import MultiLanderEnv
 import time
 import os
+from game_init import get_constants
 import pickle
 from typing import Tuple, Optional, Dict, Any
 import matplotlib.pyplot as plt
@@ -12,11 +13,15 @@ from best_genome_logger import BestGenomeLogger
 
 
 class LanderTrainer:
+    winning_genomes = []
+    lander_landed_last_round = False
+
     def __init__(self, num_landers: int = 20, checkpoint_interval: int = 5, fast_mode: bool = False):
         """
         Initialize the trainer with genome logging
         """
         # Initialize genome logger first
+        const = get_constants()
         self.genome_logger = BestGenomeLogger()
         self.logger = self.genome_logger.logger
         self.logger.info("Initializing LanderTrainer")
@@ -76,6 +81,16 @@ class LanderTrainer:
             net = neat.nn.FeedForwardNetwork.create(genome, config)
             networks.append(net)
             genome_list.append(genome)
+            
+            if not self.lander_landed_last_round:
+                if self.winning_genomes:
+                    genome_list.append(self.winning_genomes[-1])
+
+            self.lander_landed_last_round = False
+
+
+
+
             
         # Evaluate genomes in batches
         for i in range(0, len(networks), self.env.num_landers):
@@ -155,6 +170,10 @@ class LanderTrainer:
                             # Set the fitness to the current total reward
                             # This represents the accumulated reward over the full episode
                             genome.fitness = reward
+                            if genome.fitness > self.const.LANDING_REWARD:
+                                episode_landings += 1
+                                self.winning_genomes.append(genome)
+                                self.lander_landed_last_round = True
                     
                     if all(dones) or not self.env.is_running():
                         done = True
