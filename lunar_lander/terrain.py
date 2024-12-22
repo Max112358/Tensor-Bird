@@ -4,6 +4,9 @@ import random
 from game_init import get_constants
 
 class Terrain:
+    # Class variable to track last pad position
+    _last_pad_was_left = False
+    
     def __init__(self, screen_width: int, screen_height: int):
         # Get global constants
         const = get_constants()
@@ -165,11 +168,20 @@ class Terrain:
         
     @property
     def landing_pad_x(self):
-        """Get x coordinate of landing pad center"""
-        # Randomize landing pad position between 20% and 80% of screen width
+        """Get x coordinate of landing pad center with alternating sides"""
         if not hasattr(self, '_landing_pad_x'):
-            pad_min = int(self.width * 0.2)
-            pad_max = int(self.width * 0.8)
+            # Get the screen divisions
+            if Terrain._last_pad_was_left:
+                # Place on right side
+                pad_min = int(self.width * 0.6)
+                pad_max = int(self.width * 0.8)
+                Terrain._last_pad_was_left = False
+            else:
+                # Place on left side
+                pad_min = int(self.width * 0.2)
+                pad_max = int(self.width * 0.4)
+                Terrain._last_pad_was_left = True
+                
             self._landing_pad_x = random.randint(pad_min, pad_max)
             #self._landing_pad_x = pad_max #non random version for debugging
         return self._landing_pad_x

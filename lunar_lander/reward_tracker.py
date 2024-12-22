@@ -47,8 +47,14 @@ class RewardTracker:
         fuel_ratio = lander.fuel / self.const.INITIAL_FUEL
         distance_ratio = 1.0 - (distance_to_pad / terrain.width)
         height_ratio = height_diff / terrain.height
-        angle_ratio = max(0, 1.0 - (current_angle_degrees / self.const.SAFE_LANDING_ANGLE))
         
+        # New angle ratio calculation to penalize anything outside the safe landing angle
+        if current_angle_degrees <= self.const.SAFE_LANDING_ANGLE:
+            angle_ratio = 1.0  # Full points if within safe bounds
+        else:
+            angle_ratio = -1.0  # Penalize if outside safe bounds
+            
+              
         # Calculate velocity ratio with optimal velocity consideration
         optimal_velocity_y = 0.8 * self.const.SAFE_LANDING_VELOCITY
         if lander.velocity_y <= optimal_velocity_y:
@@ -57,13 +63,15 @@ class RewardTracker:
             velocity_ratio = max(0, 1.0 - ((lander.velocity_y - optimal_velocity_y) / 
                                        (self.const.SAFE_LANDING_VELOCITY - optimal_velocity_y)))
         
+        survival_reward_base = 20.0
+        
         # Calculate individual survival components for this frame
         survival_components = {
-            'fuel': 20.0 * 0.00 * fuel_ratio,
-            'distance': 20.0 * 0.5 * distance_ratio,
-            'height': 20.0 * 0.15 * height_ratio,
-            'angle': 20.0 * 0.15 * angle_ratio,
-            'velocity': 20.0 * 0.20 * velocity_ratio
+            'fuel': survival_reward_base * 0.00 * fuel_ratio,
+            'distance': survival_reward_base * 0.3 * distance_ratio,
+            'height': survival_reward_base * 0.15 * height_ratio,
+            'angle': survival_reward_base * 0.35 * angle_ratio,
+            'velocity': survival_reward_base * 0.20 * velocity_ratio
         }
         
         # Calculate frame survival bonus

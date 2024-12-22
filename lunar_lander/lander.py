@@ -29,8 +29,9 @@ class Lander:
         
         # Generate a small random initial angle between -10 and 10 degrees
         # this is important as it forces the AI to learn to rotate, rather than getting stuck in local optima of remaining perfectly vertical
-        initial_angle = math.radians(random.uniform(-10, 10))
+        #initial_angle = math.radians(random.uniform(-10, 10))
         #initial_angle = 0.1 #NONRANDOM for debugging purposes
+        initial_angle = math.pi #flip them upside down to force them to learn to right themselves
         
         # Set initial position
         self.physics.state = PhysicsState(

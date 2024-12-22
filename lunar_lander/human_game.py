@@ -100,18 +100,18 @@ class HumanLunarLander:
         
         # Draw guidance line to pad center (training target)
         pad_center = (self.terrain.landing_pad_x, self.terrain.ground_height)
-        pygame.draw.line(self.screen, self.BLUE, (self.lander.x, self.lander.y), pad_center, 1)
+        # pygame.draw.line(self.screen, self.BLUE, (self.lander.x, self.lander.y), pad_center, 1)
         
         # Draw velocity vector (scaled)
         vel_scale = 2.0
-        pygame.draw.line(
-            self.screen,
-            self.YELLOW,
-            (self.lander.x, self.lander.y),
-            (self.lander.x + self.lander.velocity_x * vel_scale, 
-             self.lander.y + self.lander.velocity_y * vel_scale),
-            2
-        )
+        # pygame.draw.line(
+        #     self.screen,
+        #     self.YELLOW,
+        #     (self.lander.x, self.lander.y),
+        #     (self.lander.x + self.lander.velocity_x * vel_scale, 
+        #      self.lander.y + self.lander.velocity_y * vel_scale),
+        #     2
+        # )
         
         # Draw angle indicator
         angle_radius = 30
@@ -119,7 +119,7 @@ class HumanLunarLander:
             self.lander.x + math.cos(self.lander.angle) * angle_radius,
             self.lander.y + math.sin(self.lander.angle) * angle_radius
         )
-        pygame.draw.line(self.screen, self.GREEN, (self.lander.x, self.lander.y), angle_end, 2)
+        # pygame.draw.line(self.screen, self.GREEN, (self.lander.x, self.lander.y), angle_end, 2)
         
         # Draw UI elements
         # Score
@@ -240,10 +240,19 @@ class HumanLunarLander:
         # Generate new terrain
         self.terrain = Terrain(self.const.SCREEN_WIDTH, self.const.SCREEN_HEIGHT)
         
+        # Calculate spawn position away from landing pad
+        landing_pad_x = self.terrain.landing_pad_x
+        
+        # If landing pad is in left half, spawn on right side, and vice versa
+        if landing_pad_x < self.const.SCREEN_WIDTH / 2:
+            spawn_x = self.const.SCREEN_WIDTH * 0.8  # Spawn at 80% of screen width
+        else:
+            spawn_x = self.const.SCREEN_WIDTH * 0.2  # Spawn at 20% of screen width
+        
+        spawn_y = self.const.SCREEN_HEIGHT * 0.1  # Start near top of screen
+        
         # Create new lander
-        start_x = self.const.SCREEN_WIDTH * 0.5
-        start_y = self.const.SCREEN_HEIGHT * 0.1
-        self.lander = Lander(start_x, start_y, self.terrain)
+        self.lander = Lander(spawn_x, spawn_y, self.terrain)
         
         # Reset game state
         self.game_over = False
