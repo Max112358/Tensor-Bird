@@ -10,11 +10,13 @@ reset_on_extinction  = True
 # node activation options
 activation_default      = tanh
 activation_mutate_rate = 0.2
+# tanh sigmoid relu cube gauss sin abs hat
+# activation_options     = tanh
 activation_options     = tanh sigmoid relu cube gauss sin abs hat
 
 # node add/remove rates
-node_add_prob           = 0.3
-node_delete_prob        = 0.3
+node_add_prob           = 0.5
+node_delete_prob        = 0.5
 
 # node bias options
 bias_init_mean          = 0.0
@@ -22,7 +24,7 @@ bias_init_stdev         = 1.5
 bias_max_value          = 30.0
 bias_min_value          = -30.0
 bias_mutate_power       = 0.5
-bias_mutate_rate        = 0.6
+bias_mutate_rate        = 0.8
 bias_replace_rate       = 0.1
 
 # network parameters
@@ -35,6 +37,8 @@ initial_connection     = full
 # node aggregation options
 aggregation_default     = sum
 aggregation_mutate_rate = 0.2
+#sum product min max mean median maxabs
+#aggregation_options     = sum
 aggregation_options     = sum product min max mean median maxabs
 
 # node response options
@@ -43,8 +47,8 @@ response_init_stdev     = 1.0
 response_max_value      = 30.0
 response_min_value      = -30.0
 response_mutate_power   = 0.5
-response_mutate_rate    = 0.6
-response_replace_rate   = 0.1
+response_mutate_rate    = 0.8
+response_replace_rate   = 0.2
 
 # connection add/remove rates
 conn_add_prob           = 0.5
@@ -52,7 +56,7 @@ conn_delete_prob        = 0.3
 
 # connection enable options
 enabled_default         = True
-enabled_mutate_rate     = 0.1
+enabled_mutate_rate     = 0.3
 
 # connection weight options
 weight_init_mean        = 0.0
@@ -60,8 +64,8 @@ weight_init_stdev       = 1.5
 weight_max_value        = 30
 weight_min_value        = -30
 weight_mutate_power     = 0.5
-weight_mutate_rate      = 0.8
-weight_replace_rate     = 0.1
+weight_mutate_rate      = 1.0
+weight_replace_rate     = 0.2
 
 # genome compatibility options
 compatibility_disjoint_coefficient = 1.0

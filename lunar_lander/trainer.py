@@ -13,7 +13,8 @@ from best_genome_logger import BestGenomeLogger
 
 
 class LanderTrainer:
-    winning_genomes = []
+    fittest_genomes = []  # Will store top genomes by fitness
+    MAX_STORED_GENOMES = 7
 
     def __init__(self, num_landers: int = 20, checkpoint_interval: int = 5, fast_mode: bool = False):
         """
@@ -57,6 +58,30 @@ class LanderTrainer:
                 print(f"Failed to initialize trainer: {str(e)}")
             raise
 
+    def _update_top_genomes(self, genome):
+        """Update the list of top genomes if the given genome qualifies"""
+        if not hasattr(genome, 'fitness') or genome.fitness is None:
+            return
+
+        # Create a copy of the genome for storage
+        genome_copy = pickle.loads(pickle.dumps(genome))
+        
+        # If we haven't reached max capacity, just append
+        if len(self.fittest_genomes) < self.MAX_STORED_GENOMES:
+            if not any(g.fitness == genome.fitness for g in self.fittest_genomes):  # Avoid duplicates
+                self.fittest_genomes.append(genome_copy)
+                self.fittest_genomes.sort(key=lambda x: x.fitness, reverse=True)
+                print(f"\n[Top Genomes] Added new genome with fitness {genome.fitness:.2f}")
+                print(f"Current top 5 fitnesses: {[f'{g.fitness:.2f}' for g in self.fittest_genomes[:5]]}")
+        # If the new genome is better than the worst stored genome
+        elif genome.fitness > self.fittest_genomes[-1].fitness:
+            if not any(g.fitness == genome.fitness for g in self.fittest_genomes):  # Avoid duplicates
+                old_worst = self.fittest_genomes[-1].fitness
+                self.fittest_genomes[-1] = genome_copy
+                self.fittest_genomes.sort(key=lambda x: x.fitness, reverse=True)
+                print(f"\n[Top Genomes] Replaced genome (fitness: {old_worst:.2f}) with better genome (fitness: {genome.fitness:.2f})")
+                print(f"Current top 5 fitnesses: {[f'{g.fitness:.2f}' for g in self.fittest_genomes[:5]]}")
+
     def eval_genomes(self, genomes, config) -> None:
         """
         Evaluate each genome.
@@ -76,27 +101,31 @@ class LanderTrainer:
         # Create neural networks for each genome
         networks = []
         genome_list = []
-        for genome_id, genome in genomes:
+        
+        # Create copies of top genomes with new IDs
+        max_genome_id = max(gid for gid, _ in genomes)
+        next_genome_id = max_genome_id + 1
+        
+        injected_genomes = []
+        for top_genome in self.fittest_genomes:
+            # Create a deep copy of the genome
+            genome_copy = pickle.loads(pickle.dumps(top_genome))
+            # Reset the genome's fitness
+            genome_copy.fitness = None
+            # Add to the injection list with a new ID
+            injected_genomes.append((next_genome_id, genome_copy))
+            next_genome_id += 1
+        
+        # Combine original genomes with injected ones
+        all_genomes = genomes + injected_genomes
+        
+        # Process all genomes (original + injected)
+        for genome_id, genome in all_genomes:
+            genome.fitness = None  # Reset fitness for fresh evaluation
             net = neat.nn.FeedForwardNetwork.create(genome, config)
             networks.append(net)
             genome_list.append(genome)
-            
-            
-            # Inject winner back in if not present
-            if self.winning_genomes:
-                # Process each winning genome
-                for genome in self.winning_genomes[:]:  # Create a copy to iterate
-                    if getattr(genome, 'injection_count', 0) >= 100:
-                        self.winning_genomes.remove(genome)
-                    else:
-                        genome.injection_count = getattr(genome, 'injection_count', 0) + 1
-                        genome_list.append(genome)
-            
-
-
-
-
-            
+        
         # Evaluate genomes in batches
         for i in range(0, len(networks), self.env.num_landers):
             batch_networks = networks[i:i + self.env.num_landers]
@@ -107,7 +136,7 @@ class LanderTrainer:
                 batch_networks.append(None)
                 batch_genomes.append(None)
             
-            states = self.env.reset()
+            states = self.env.reset()  # Fresh environment for each batch
             done = False
             step = 0
             total_landers = len(states)
@@ -179,10 +208,7 @@ class LanderTrainer:
                             
                             if genome.fitness > self.const.LANDING_REWARD:
                                 episode_landings += 1
-                                # Only add if it's not already been injected
-                                if not hasattr(genome, 'injection_count'):
-                                    self.winning_genomes.append(genome)
-                                    genome.injection_count = 0
+                                self._update_top_genomes(genome)
                                 
                             
                     
@@ -221,6 +247,11 @@ class LanderTrainer:
                     self.best_genome = genome
                     self.best_genome_id = genome.key
         
+        # Update top genomes list after evaluation
+        for genome in genome_list:
+            if genome is not None:
+                self._update_top_genomes(genome)
+
         # Print generation summary
         print(f"\nGeneration {self.generation} completed:")
         print(f"Max Fitness: {gen_stats['max_fitness']:.2f}")
