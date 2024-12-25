@@ -225,32 +225,37 @@ class LanderTrainer:
             print()  # New line after step updates
         
         # Calculate generation statistics
-        for genome in genome_list:
-            if genome is not None and hasattr(genome, 'fitness') and genome.fitness is not None:
-                gen_stats['max_fitness'] = max(gen_stats['max_fitness'], genome.fitness)
-                gen_stats['total_fitness'] += genome.fitness
-        
-        # Calculate generation averages
+        gen_stats = {
+            'max_fitness': float('-inf'),
+            'avg_fitness': 0,
+            'total_fitness': 0,
+            'successful_landings': 0
+        }
+
+        # Use a single pass to calculate all statistics
         valid_genomes = [g for g in genome_list if g is not None and hasattr(g, 'fitness') and g.fitness is not None]
         if valid_genomes:
+            fitnesses = [g.fitness for g in valid_genomes]
+            gen_stats['max_fitness'] = max(fitnesses)
+            gen_stats['total_fitness'] = sum(fitnesses)
             gen_stats['avg_fitness'] = gen_stats['total_fitness'] / len(valid_genomes)
-        
+            gen_stats['successful_landings'] = sum(1 for f in fitnesses if f >= self.const.LANDING_REWARD)
+
+            # Update best fitness and genome if we found a better one
+            if gen_stats['max_fitness'] > self.best_fitness:
+                self.best_fitness = gen_stats['max_fitness']
+                # Find the best genome
+                self.best_genome = next(g for g in valid_genomes if g.fitness == gen_stats['max_fitness'])
+                self.best_genome_id = self.best_genome.key
+
         # Store generation statistics
         self.generation_stats.append(gen_stats)
-        
-        # Update best fitness
-        if gen_stats['max_fitness'] > self.best_fitness:
-            self.best_fitness = gen_stats['max_fitness']
-            # Find best genome
-            for genome in genome_list:
-                if genome is not None and hasattr(genome, 'fitness') and genome.fitness == gen_stats['max_fitness']:
-                    self.best_genome = genome
-                    self.best_genome_id = genome.key
-        
+
         # Update top genomes list after evaluation
-        for genome in genome_list:
-            if genome is not None:
-                self._update_top_genomes(genome)
+        for genome in valid_genomes:
+            self._update_top_genomes(genome)
+            if genome.fitness >= self.const.LANDING_REWARD:
+                self.save_checkpoint()
 
         # Print generation summary
         print(f"\nGeneration {self.generation} completed:")
@@ -259,10 +264,6 @@ class LanderTrainer:
         print(f"Successful Landings: {gen_stats['successful_landings']}")
         
         self.generation += 1
-        
-        # Save checkpoint if needed
-        if self.generation % self.checkpoint_interval == 0:
-            self.save_checkpoint()
     
     def run(self, config_path: str, n_generations: int = 50, 
             checkpoint_file: str = None) -> Tuple[Optional[neat.genome.DefaultGenome], 
@@ -430,16 +431,13 @@ class LanderTrainer:
     def close(self) -> None:
         """Clean up resources"""
         self.env.close()
-
+        
     def save_checkpoint(self) -> None:
-        """Save a checkpoint of the current training state"""
-        filename = f'checkpoints/neat-checkpoint-{self.generation}'
-        with open(filename, 'wb') as f:
-            pickle.dump({
-                'generation': self.generation,
-                'best_fitness': self.best_fitness,
-                'generation_stats': self.generation_stats
-            }, f)
+            """Save a checkpoint of the current training state"""
+            filename = f'checkpoints/neat-checkpoint-{self.generation}'
+            # Use NEAT's built-in checkpointer to save the population
+            if self.population:
+                self.population.save_checkpoint(filename)
             
     def load_checkpoint(self, filename: str) -> Dict[str, Any]:
         """Load a training checkpoint"""
