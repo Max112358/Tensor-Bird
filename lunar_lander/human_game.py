@@ -5,16 +5,20 @@ from lander import Lander
 from terrain import Terrain
 from renderer import Renderer
 import game_init
+from input_handler import InputHandler  # Add this with other imports
+from reward_tracker import RewardTracker  # Add this with other imports
 
 class HumanLunarLander:
     def __init__(self):
         # Initialize game constants first
         self.const = game_init.init()
+        self.input_handler = InputHandler()  # Add this line
+        self.reward_tracker = RewardTracker()  # Add this line
         
         # Initialize game components
         pygame.init()
         self.screen = pygame.display.set_mode((self.const.SCREEN_WIDTH, self.const.SCREEN_HEIGHT))
-        pygame.display.set_caption("Lunar Lander - WASD Controls")
+        pygame.display.set_caption("Lunar Lander - WASD Controls")  # Fix typo here
         
         self.terrain = Terrain(self.const.SCREEN_WIDTH, self.const.SCREEN_HEIGHT)
         self.lander = None
@@ -131,15 +135,21 @@ class HumanLunarLander:
         y_offset = 10
         line_height = 25
         
+        # Get normalized values
+        norm_state = self.input_handler.get_state(self.lander, self.terrain)
+        
         # Distance to pad
         distance_x = abs(self.lander.x - self.terrain.landing_pad_x)
         distance_y = abs(self.lander.y - self.terrain.ground_height)
         metrics = [
-            f"Dist to pad: {distance_x:.1f}x, {distance_y:.1f}y",
-            f"Velocity: {abs(self.lander.velocity_x):.1f}x, {abs(self.lander.velocity_y):.1f}y",
-            f"Angle: {math.degrees(self.lander.angle):.1f}°",
-            f"Angular vel: {math.degrees(self.lander.angular_velocity):.1f}°/s",
-            f"Fuel: {int(self.lander.fuel)}"
+            f"Raw dist to pad: {distance_x:.1f}x, {distance_y:.1f}y",
+            f"Norm dist to pad: {norm_state[0]:.3f}",
+            f"Raw velocity: {self.lander.velocity_x:.1f}x, {self.lander.velocity_y:.1f}y",
+            f"Norm velocity_y: {norm_state[1]:.3f}",
+            f"Raw angle: {math.degrees(self.lander.angle):.1f}°",  # Fix format specifier
+            f"Norm angle: {norm_state[2]:.3f}",
+            f"Angular vel: {math.degrees(self.lander.angular_velocity):.1f}°/s",  # Fix format specifier
+            f"Reward: {self.reward_tracker.get_total_reward():.2f}"  # Add reward to metrics
         ]
         
         # Add safety thresholds
@@ -197,33 +207,43 @@ class HumanLunarLander:
                 # Update lander physics
                 self.lander.step(action)
                 
+                # Calculate reward components for active lander
+                reward_components = self.reward_tracker.calculate_survival_reward(self.lander, self.terrain)
+                
                 # First check for landing
                 if self.terrain.check_landing(self.lander.x, self.lander.y, self.lander.velocity_y, self.lander):
                     self.score += 100
                     self.game_over = True
                     self.lander.terminate('landed')
+                    reward_components['terminal_reward'] = self.reward_tracker.calculate_terminal_reward(self.lander, self.terrain, 'landed')
                 
                 # Then check for out of bounds
                 elif self.lander.x < 0 or self.lander.x > self.const.SCREEN_WIDTH or self.lander.y < 0:
                     self.score -= 50
                     self.game_over = True
                     self.lander.terminate('out_of_bounds')
+                    reward_components['terminal_reward'] = self.reward_tracker.calculate_terminal_reward(self.lander, self.terrain, 'out_of_bounds')
                 
                 # Then check for fuel
                 elif self.lander.fuel <= 0:
                     self.score -= 50
                     self.game_over = True
                     self.lander.terminate('out_of_fuel')
+                    reward_components['terminal_reward'] = self.reward_tracker.calculate_terminal_reward(self.lander, self.terrain, 'out_of_fuel')
                 
                 # Finally check for collisions, but only if we haven't landed
                 elif self.terrain.check_collision(self.lander.x, self.lander.y, self.lander):
                     self.score -= 50
                     self.game_over = True
                     self.lander.terminate('crashed')
+                    reward_components['terminal_reward'] = self.reward_tracker.calculate_terminal_reward(self.lander, self.terrain, 'crashed')
                 
                 else:
                     # Small reward for staying alive
                     self.score += 0.1
+                
+                # Update reward tracker with new components
+                self.reward_tracker.add_rewards(reward_components)
             
             # Render game state
             self.render()
@@ -257,6 +277,7 @@ class HumanLunarLander:
         # Reset game state
         self.game_over = False
         self.score = 0
+        self.reward_tracker.reset()  # Add this line to reset the reward tracker
 
 if __name__ == "__main__":
     game = HumanLunarLander()

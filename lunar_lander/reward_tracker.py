@@ -1,6 +1,8 @@
 from game_init import get_constants
 import math
 from typing import Dict, Any
+import numpy as np
+from utils import convert_degrees_to_custom_angle
 
 class RewardTracker:
     """Tracks reward components for a single lander throughout its episode"""
@@ -33,28 +35,54 @@ class RewardTracker:
         # Track accumulated survival reward
         self.accumulated_survival_reward = 0.0
 
+    def reset(self):
+        """Reset the reward tracker statistics"""
+        self.stats = {
+            'terminal_reward': 0.0,
+            'survival': {
+                'fuel': 0.0,
+                'distance': 0.0,
+                'height': 0.0,
+                'angle': 0.0,
+                'velocity': 0.0
+            },
+            'ratios': {
+                'fuel': 0.0,
+                'distance': 0.0,
+                'height': 0.0,
+                'angle': 0.0,
+                'velocity': 0.0
+            },
+            'total_reward': 0.0
+        }
+        self.accumulated_survival_reward = 0.0
+
     def calculate_survival_reward(self, lander, terrain) -> Dict[str, Any]:
         """
         Calculate reward components based on current lander state
         Returns dict containing all reward components and ratios for this frame
         """
         # Calculate base metrics
-        distance_to_pad = abs(lander.x - terrain.landing_pad_x)
+        raw_distance_x = terrain.landing_pad_x - lander.x  # Flipped from (lander - pad) to (pad - lander)
+        distance_to_pad = abs(raw_distance_x)
         height_diff = abs(lander.y - terrain.ground_height)
-        current_angle_degrees = abs(math.degrees(lander.angle))
+        current_angle_degrees = math.degrees(lander.angle) % 360
+        norm_angle = convert_degrees_to_custom_angle(current_angle_degrees)
+        safe_angle = convert_degrees_to_custom_angle(self.const.SAFE_LANDING_ANGLE)
         
         # Calculate raw ratios for this frame
         fuel_ratio = lander.fuel / self.const.INITIAL_FUEL
-        distance_ratio = 1.0 - (distance_to_pad / terrain.width)
+        distance_ratio = np.clip(raw_distance_x / terrain.width, -1.0, 1.0)
         height_ratio = height_diff / terrain.height
         
-        # New angle ratio calculation to penalize anything outside the safe landing angle
-        if current_angle_degrees <= self.const.SAFE_LANDING_ANGLE:
-            angle_ratio = 1.0  # Full points if within safe bounds
+        # Calculate angle ratio
+        if abs(norm_angle) < safe_angle:
+            angle_ratio = 1.0  # Reward if within safe angle
+        elif (raw_distance_x >= 0 and 0 <= norm_angle <= 0.5) or (raw_distance_x < 0 and -0.5 <= norm_angle < 0):
+            angle_ratio = 1.0  # Reward if in the correct quadrant
         else:
-            angle_ratio = -1.0  # Penalize if outside safe bounds
-            
-              
+            angle_ratio = -1.0  # Penalize otherwise
+
         # Calculate velocity ratio with optimal velocity consideration
         optimal_velocity_y = 0.8 * self.const.SAFE_LANDING_VELOCITY
         if lander.velocity_y <= optimal_velocity_y:
@@ -68,10 +96,10 @@ class RewardTracker:
         # Calculate individual survival components for this frame
         survival_components = {
             'fuel': survival_reward_base * 0.00 * fuel_ratio,
-            'distance': survival_reward_base * 0.3 * distance_ratio,
-            'height': survival_reward_base * 0.15 * height_ratio,
-            'angle': survival_reward_base * 0.35 * angle_ratio,
-            'velocity': survival_reward_base * 0.20 * velocity_ratio
+            'distance': survival_reward_base * 0.25 * distance_ratio,
+            'height': survival_reward_base * 0.0 * height_ratio,
+            'angle': survival_reward_base * 0.5 * angle_ratio,
+            'velocity': survival_reward_base * 0.25 * velocity_ratio
         }
         
         # Calculate frame survival bonus

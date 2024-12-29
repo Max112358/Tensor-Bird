@@ -26,7 +26,7 @@ class GameConstants:
     # Optional parameters (with defaults)
     ANGULAR_DAMPING: float = 0.5
     LINEAR_DAMPING: float = 0.1
-    SAFE_LANDING_ANGLE: float = 18.0
+    SAFE_LANDING_ANGLE: float = 18.0  # Defined in degrees
     INITIAL_FUEL: float = 200.0
     MAIN_ENGINE_FUEL_COST: float = 1.0
     SIDE_ENGINE_FUEL_COST: float = 0.5

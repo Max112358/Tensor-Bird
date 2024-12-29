@@ -163,6 +163,7 @@ def main():
                        help=f'Number of landers to train simultaneously (default: {pop_size} from NEAT config)')
     parser.add_argument('--checkpoint-interval', type=int, default=250, 
                        help='How often to save checkpoints (in generations)')
+    parser.add_argument('--injection', action='store_true', help='Enable genome injection')  # Add injection argument
     args = parser.parse_args()
 
     # Verify config file exists
@@ -184,7 +185,8 @@ def main():
         trainer = LanderTrainer(
             num_landers=args.num_landers,
             checkpoint_interval=args.checkpoint_interval,
-            fast_mode=args.fast
+            fast_mode=args.fast,
+            inject_genomes=args.injection  # Pass the injection flag
         )
         
         try:

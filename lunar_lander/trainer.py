@@ -16,7 +16,7 @@ class LanderTrainer:
     fittest_genomes = []  # Will store top genomes by fitness
     MAX_STORED_GENOMES = 7
 
-    def __init__(self, num_landers: int = 20, checkpoint_interval: int = 5, fast_mode: bool = False):
+    def __init__(self, num_landers: int = 20, checkpoint_interval: int = 5, fast_mode: bool = False, inject_genomes: bool = False):
         """
         Initialize the trainer with genome logging
         """
@@ -42,10 +42,18 @@ class LanderTrainer:
             self.fast_mode = fast_mode
             self.population = None
             self.best_genome_io = None  # To store inputs and outputs of the best genome
+            self.inject_genomes = inject_genomes  # Store the injection flag
             
             # Create required directories
             os.makedirs('checkpoints', exist_ok=True)
             os.makedirs('outputs', exist_ok=True)
+            
+            # Initialize checkpointer
+            self.checkpointer = neat.Checkpointer(
+                generation_interval=checkpoint_interval,
+                time_interval_seconds=None,
+                filename_prefix='checkpoints/neat-checkpoint-'
+            )
             
             # Patch NEAT with genome logging
             self.genome_logger.patch_neat()
@@ -82,6 +90,18 @@ class LanderTrainer:
                 print(f"\n[Top Genomes] Replaced genome (fitness: {old_worst:.2f}) with better genome (fitness: {genome.fitness:.2f})")
                 print(f"Current top 5 fitnesses: {[f'{g.fitness:.2f}' for g in self.fittest_genomes[:5]]}")
 
+    def save_checkpoint(self) -> None:
+        """Manually trigger a checkpoint save using NEAT's checkpointer"""
+        if self.checkpointer and self.population:
+            # Force an immediate checkpoint save
+            self.checkpointer.save_checkpoint(
+                self.population.config,
+                self.population.population,
+                self.population.species,
+                self.generation
+            )
+            self.logger.info(f"Manually saved checkpoint at generation {self.generation}")
+
     def eval_genomes(self, genomes, config) -> None:
         """
         Evaluate each genome.
@@ -102,22 +122,25 @@ class LanderTrainer:
         networks = []
         genome_list = []
         
-        # Create copies of top genomes with new IDs
-        max_genome_id = max(gid for gid, _ in genomes)
-        next_genome_id = max_genome_id + 1
-        
-        injected_genomes = []
-        for top_genome in self.fittest_genomes:
-            # Create a deep copy of the genome
-            genome_copy = pickle.loads(pickle.dumps(top_genome))
-            # Reset the genome's fitness
-            genome_copy.fitness = None
-            # Add to the injection list with a new ID
-            injected_genomes.append((next_genome_id, genome_copy))
-            next_genome_id += 1
-        
-        # Combine original genomes with injected ones
-        all_genomes = genomes + injected_genomes
+        # Create copies of top genomes with new IDs if injection is enabled
+        if self.inject_genomes:
+            max_genome_id = max(gid for gid, _ in genomes)
+            next_genome_id = max_genome_id + 1
+            
+            injected_genomes = []
+            for top_genome in self.fittest_genomes:
+                # Create a deep copy of the genome
+                genome_copy = pickle.loads(pickle.dumps(top_genome))
+                # Reset the genome's fitness
+                genome_copy.fitness = None
+                # Add to the injection list with a new ID
+                injected_genomes.append((next_genome_id, genome_copy))
+                next_genome_id += 1
+            
+            # Combine original genomes with injected ones
+            all_genomes = genomes + injected_genomes
+        else:
+            all_genomes = genomes
         
         # Process all genomes (original + injected)
         for genome_id, genome in all_genomes:
@@ -159,16 +182,16 @@ class LanderTrainer:
                         if len(output) >= 3:
                             # Convert from [-1,1] to [0,1] range if using tanh activation
                             normalized_outputs = [(x + 1) / 2 for x in output]
-                            threshold = 0.3
+                            threshold = 0.5
                             
                             # Check thrusters with threshold
-                            if normalized_outputs[1] > threshold:  # Main thruster
-                                action = 2
-                            elif normalized_outputs[0] > threshold:  # Left thruster
+                            if normalized_outputs[0] > threshold:  # Left thruster
                                 action = 1
                             elif normalized_outputs[2] > threshold:  # Right thruster
                                 action = 3
-                                
+                            elif normalized_outputs[1] > threshold:  # Main thruster
+                                action = 2
+                            
                         actions.append(action)
                     except Exception as e:
                         print(f"Error activating network: {e}")
@@ -255,6 +278,7 @@ class LanderTrainer:
         for genome in valid_genomes:
             self._update_top_genomes(genome)
             if genome.fitness >= self.const.LANDING_REWARD:
+                # Manually trigger checkpoint save on successful landing
                 self.save_checkpoint()
 
         # Print generation summary
@@ -282,11 +306,7 @@ class LanderTrainer:
             if checkpoint_file:
                 self.logger.info(f"Restoring from checkpoint: {checkpoint_file}")
                 self.population = neat.Checkpointer.restore_checkpoint(checkpoint_file)
-                try:
-                    self.generation = int(checkpoint_file.split('-')[-1])
-                    self.logger.info(f"Restored to generation {self.generation}")
-                except ValueError:
-                    self.logger.warning("Could not determine generation from checkpoint filename")
+                self.logger.info(f"Restored to generation {self.population.generation}")
             else:
                 self.logger.info("Creating new population")
                 self.population = neat.Population(config)
@@ -301,12 +321,12 @@ class LanderTrainer:
             self.population.add_reporter(stats)
             
             # Add checkpointer
-            checkpointer = neat.Checkpointer(
+            self.checkpointer = neat.Checkpointer(
                 generation_interval=self.checkpoint_interval,
                 time_interval_seconds=None,
                 filename_prefix='checkpoints/neat-checkpoint-'
             )
-            self.population.add_reporter(checkpointer)
+            self.population.add_reporter(self.checkpointer)
             
             # Run for specified number of generations
             remaining_generations = n_generations - self.generation
@@ -431,19 +451,3 @@ class LanderTrainer:
     def close(self) -> None:
         """Clean up resources"""
         self.env.close()
-        
-    def save_checkpoint(self) -> None:
-            """Save a checkpoint of the current training state"""
-            filename = f'checkpoints/neat-checkpoint-{self.generation}'
-            # Use NEAT's built-in checkpointer to save the population
-            if self.population:
-                self.population.save_checkpoint(filename)
-            
-    def load_checkpoint(self, filename: str) -> Dict[str, Any]:
-        """Load a training checkpoint"""
-        with open(filename, 'rb') as f:
-            checkpoint = pickle.load(f)
-            self.generation = checkpoint['generation']
-            self.best_fitness = checkpoint['best_fitness']
-            self.generation_stats = checkpoint['generation_stats']
-            return checkpoint

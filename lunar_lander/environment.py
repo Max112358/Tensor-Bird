@@ -167,7 +167,7 @@ class MultiLanderEnv:
         else:
             spawn_x = self.width * 0.2  # Spawn at 20% of screen width
         
-        spawn_x = self.width * 0.1  # ignore above and always spawn left
+        #spawn_x = self.width * 0.1  # ignore above and always spawn left
         spawn_y = self.height * 0.1  # Start near top of screen
         
         # Create new landers all at the same position
